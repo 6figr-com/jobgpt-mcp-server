@@ -266,7 +266,7 @@ Add `"DEBUG": "true"` to your env config to see detailed API request/response lo
 ## Development
 
 ```bash
-git clone https://github.com/6figr/jobgpt-mcp-server.git
+git clone https://github.com/6figr-com/jobgpt-mcp-server.git
 cd jobgpt-mcp-server
 npm install
 cp .env.example .env   # add your API key
@@ -291,4 +291,4 @@ MIT
 
 - [JobGPT](https://6figr.com/jobgpt) — AI-powered job search platform
 - [Get API Key](https://6figr.com/account) — Generate your MCP API key
-- [GitHub Issues](https://github.com/6figr/jobgpt-mcp-server/issues) — Report bugs or request features
+- [GitHub Issues](https://github.com/6figr-com/jobgpt-mcp-server/issues) — Report bugs or request features
