@@ -2,6 +2,10 @@
 
 The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt) — search jobs, auto-apply, manage resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
 
+<a href="https://glama.ai/mcp/servers/@6figr-com/job-gpt-mcp-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@6figr-com/job-gpt-mcp-server/badge" alt="JobGPT Server MCP server" />
+</a>
+
 ## What You Can Do
 
 Ask your AI assistant things like:
