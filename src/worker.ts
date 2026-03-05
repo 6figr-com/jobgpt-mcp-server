@@ -22,13 +22,20 @@ export default {
       });
     }
 
-    // Only handle /mcp path
-    if (url.pathname !== '/mcp') {
+    // Handle root and /mcp paths
+    if (url.pathname !== '/' && url.pathname !== '/mcp') {
       return new Response(JSON.stringify({
         name: 'jobgpt-mcp-server',
         version: '1.0.0',
-        mcp: '/mcp',
-      }), { headers: { 'Content-Type': 'application/json' } });
+      }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // Only POST is supported for stateless Streamable HTTP transport
+    if (request.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed. Use POST for MCP requests.' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json', 'Allow': 'POST, OPTIONS' },
+      });
     }
 
     // Extract user's API key from Authorization header

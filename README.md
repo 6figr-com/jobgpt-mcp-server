@@ -1,6 +1,6 @@
 # JobGPT MCP Server
 
-The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt) — search jobs, auto-apply, manage resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
+The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt) — search jobs, auto-apply to jobs, manage resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
 
 ## What You Can Do
 
@@ -25,7 +25,7 @@ The MCP server connects your AI assistant to the full JobGPT platform — 34 too
 
 ### 2. Add to Your AI Tool
 
-Pick your tool below and paste the config. Replace `your-api-key-here` with your actual key.
+Add the following config to your AI tool. Replace `your-api-key-here` with your actual key. No installation required — connects directly to the hosted server.
 
 ---
 
@@ -40,10 +40,10 @@ Pick your tool below and paste the config. Replace `your-api-key-here` with your
 {
   "mcpServers": {
     "jobgpt": {
-      "command": "npx",
-      "args": ["-y", "jobgpt-mcp-server"],
-      "env": {
-        "JOBGPT_API_KEY": "your-api-key-here"
+      "type": "http",
+      "url": "https://mcp.6figr.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key-here"
       }
     }
   }
@@ -52,22 +52,24 @@ Pick your tool below and paste the config. Replace `your-api-key-here` with your
 
 ### Claude Code (CLI)
 
-Run this in your terminal:
+**Option A: One-liner with `claude mcp add`** (fastest):
 
 ```bash
-claude mcp add jobgpt -e JOBGPT_API_KEY=your-api-key-here -- npx -y jobgpt-mcp-server
+claude mcp add jobgpt -t http -u https://mcp.6figr.com/mcp --header "Authorization: Bearer your-api-key-here"
 ```
 
-Or add manually to `~/.claude/settings.json`:
+**Option B: Edit `settings.json` manually**
+
+Add to `~/.claude/settings.json`:
 
 ```json
 {
   "mcpServers": {
     "jobgpt": {
-      "command": "npx",
-      "args": ["-y", "jobgpt-mcp-server"],
-      "env": {
-        "JOBGPT_API_KEY": "your-api-key-here"
+      "type": "http",
+      "url": "https://mcp.6figr.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key-here"
       }
     }
   }
@@ -82,10 +84,10 @@ Go to **Settings** > **MCP** > **Add new MCP server**, or add to `~/.cursor/mcp.
 {
   "mcpServers": {
     "jobgpt": {
-      "command": "npx",
-      "args": ["-y", "jobgpt-mcp-server"],
-      "env": {
-        "JOBGPT_API_KEY": "your-api-key-here"
+      "type": "http",
+      "url": "https://mcp.6figr.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key-here"
       }
     }
   }
@@ -100,10 +102,10 @@ Go to **Settings** > **Cascade** > **MCP** > **Add Server** > **Add custom serve
 {
   "mcpServers": {
     "jobgpt": {
-      "command": "npx",
-      "args": ["-y", "jobgpt-mcp-server"],
-      "env": {
-        "JOBGPT_API_KEY": "your-api-key-here"
+      "type": "http",
+      "url": "https://mcp.6figr.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key-here"
       }
     }
   }
@@ -118,10 +120,10 @@ Open the Cline MCP settings in VS Code and add:
 {
   "mcpServers": {
     "jobgpt": {
-      "command": "npx",
-      "args": ["-y", "jobgpt-mcp-server"],
-      "env": {
-        "JOBGPT_API_KEY": "your-api-key-here"
+      "type": "http",
+      "url": "https://mcp.6figr.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-api-key-here"
       }
     }
   }
@@ -135,27 +137,25 @@ Add to your Continue config (`~/.continue/config.yaml`):
 ```yaml
 mcpServers:
   - name: jobgpt
-    command: npx
-    args: ["-y", "jobgpt-mcp-server"]
-    env:
-      JOBGPT_API_KEY: your-api-key-here
+    type: http
+    url: https://mcp.6figr.com/mcp
+    headers:
+      Authorization: "Bearer your-api-key-here"
 ```
 
-### Remote (Hosted) Mode
+### Alternative: Run Locally
 
-If you prefer not to run the server locally, you can connect to the hosted version using `mcp-remote`. This requires no local Node.js installation:
+If you prefer to run the server on your machine (requires Node.js 18+):
 
 ```json
 {
   "mcpServers": {
     "jobgpt": {
       "command": "npx",
-      "args": [
-        "-y", "mcp-remote",
-        "https://jobgpt-mcp-server.cto-df7.workers.dev/mcp",
-        "--header",
-        "Authorization:Bearer your-api-key-here"
-      ]
+      "args": ["-y", "jobgpt-mcp-server"],
+      "env": {
+        "JOBGPT_API_KEY": "your-api-key-here"
+      }
     }
   }
 }

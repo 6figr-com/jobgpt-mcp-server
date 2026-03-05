@@ -130,25 +130,26 @@ export function registerResumeTools(server: McpServer, client: JobGPTApiClient) 
     }
   );
 
-  server.tool(
-    'calculate_match_score',
-    'Calculate how well your resume matches a job application. Returns a relevancy score and analysis including matching skills, missing skills, and optimization suggestions.',
-    {
-      applicationId: z.string().describe('The job application ID to calculate match score for'),
-    },
-    async (args) => {
-      const result = await client.calculateMatchScore(args.applicationId);
-      const response = {
-        applicationId: args.applicationId,
-        matchScore: result.relevancyScore >= 0 ? `${Math.round(result.relevancyScore * 100)}%` : 'Unable to calculate',
-        justification: result.justification,
-        matchingSkills: result.matchingSkills,
-        missingSkills: result.missingSkills,
-        optimizations: result.optimizations,
-      };
-      return { content: [{ type: 'text' as const, text: JSON.stringify(response, null, 2) }] };
-    }
-  );
+  // calculate_match_score - temporarily disabled
+  // server.tool(
+  //   'calculate_match_score',
+  //   'Calculate how well your resume matches a job application. Returns a relevancy score and analysis including matching skills, missing skills, and optimization suggestions.',
+  //   {
+  //     applicationId: z.string().describe('The job application ID to calculate match score for'),
+  //   },
+  //   async (args) => {
+  //     const result = await client.calculateMatchScore(args.applicationId);
+  //     const response = {
+  //       applicationId: args.applicationId,
+  //       matchScore: result.relevancyScore >= 0 ? `${Math.round(result.relevancyScore * 100)}%` : 'Unable to calculate',
+  //       justification: result.justification,
+  //       matchingSkills: result.matchingSkills,
+  //       missingSkills: result.missingSkills,
+  //       optimizations: result.optimizations,
+  //     };
+  //     return { content: [{ type: 'text' as const, text: JSON.stringify(response, null, 2) }] };
+  //   }
+  // );
 
   server.tool(
     'upload_resume',

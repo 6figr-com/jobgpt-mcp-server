@@ -83,7 +83,7 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
 
   server.tool(
     'get_job',
-    'Get detailed information about a specific job posting by ID',
+    'Get detailed information about a specific job listing/posting by its job listing ID (not application ID). Use this to view the full job posting details including description, salary, skills, and company info. For job application details, use get_application instead.',
     {
       id: z.string().describe('The job ID'),
     },

@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { JobGPTApiClient, JobApplication } from '../api-client.js';
+import { JobGPTApiClient, JobApplication, Interview } from '../api-client.js';
 
 export function registerApplicationTools(server: McpServer, client: JobGPTApiClient) {
   server.tool(
@@ -38,13 +38,19 @@ export function registerApplicationTools(server: McpServer, client: JobGPTApiCli
 
   server.tool(
     'get_application',
-    'Get details of a specific job application by ID',
+    'Get details of a specific job application by ID. Optionally include the full job listing (description, salary, skills, etc.).',
     {
       id: z.string().describe('The application ID'),
+      includeJobListing: z.boolean().optional().describe('If true, includes the full job listing details (description, salary, experience level, skills) in the response'),
     },
     async (args) => {
-      const application = await client.getApplication(args.id);
-      return { content: [{ type: 'text' as const, text: JSON.stringify(formatApplication(application), null, 2) }] };
+      const application = await client.getApplication(args.id, { includeJobListing: args.includeJobListing });
+      const formatted = formatApplication(application);
+      if (args.includeJobListing) {
+        const raw = application as unknown as Record<string, unknown>;
+        if (raw.jobListing) { formatted.jobListing = raw.jobListing; }
+      }
+      return { content: [{ type: 'text' as const, text: JSON.stringify(formatted, null, 2) }] };
     }
   );
 
@@ -128,6 +134,47 @@ export function registerApplicationTools(server: McpServer, client: JobGPTApiCli
       };
     }
   );
+
+  server.tool(
+    'list_interviews',
+    'List job interviews that are being actively tracked by JobGPT (detected from email confirmations). Use upcoming=true to get scheduled/rescheduled interviews. Can also filter by application ID or status.',
+    {
+      jobApplicationId: z.string().optional().describe('Filter interviews for a specific job application'),
+      status: z.enum(['SCHEDULED', 'RESCHEDULED', 'CANCELLED', 'COMPLETED']).optional().describe('Filter by interview status'),
+      upcoming: z.boolean().optional().describe('If true, returns only upcoming interviews (SCHEDULED or RESCHEDULED)'),
+      page: z.number().optional().describe('Page number (default: 1)'),
+      limit: z.number().optional().describe('Number of results per page (default: 20, max: 50)'),
+    },
+    async (args) => {
+      const result = await client.listInterviews({
+        jobApplicationId: args.jobApplicationId,
+        status: args.status,
+        upcoming: args.upcoming,
+        page: args.page,
+        limit: args.limit,
+      });
+      return { content: [{ type: 'text' as const, text: JSON.stringify({ count: result.count, interviews: result.interviews.map(formatInterview) }, null, 2) }] };
+    }
+  );
+}
+
+function formatInterview(interview: Interview): Record<string, unknown> {
+  return {
+    id: interview.id,
+    jobApplicationId: interview.jobApplicationId,
+    company: interview.company,
+    title: interview.title,
+    interviewTime: interview.interviewTime,
+    timezone: interview.timezone,
+    format: interview.format,
+    meetingPlatform: interview.meetingPlatform,
+    location: interview.location,
+    interviewerName: interview.interviewerName,
+    interviewerEmail: interview.interviewerEmail,
+    duration: interview.duration,
+    notes: interview.notes,
+    status: interview.status,
+  };
 }
 
 function formatApplication(app: JobApplication): Record<string, unknown> {

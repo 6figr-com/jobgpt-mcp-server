@@ -149,6 +149,26 @@ export interface JobApplication {
   updatedAt: string;
 }
 
+export interface Interview {
+  id: string;
+  jobApplicationId: string;
+  jobHuntId: string;
+  company: Record<string, unknown>;
+  title: string;
+  interviewTime: string | null;
+  timezone: string | null;
+  format: string | null;
+  meetingPlatform: string | null;
+  location: string | null;
+  interviewerName: string | null;
+  interviewerEmail: string | null;
+  duration: string | null;
+  notes: string | null;
+  status: string;
+  dateCreated: string;
+  dateUpdated: string;
+}
+
 export interface ApplicationStats {
   total: number;
   byStatus: Record<string, number>;
@@ -497,8 +517,10 @@ export class JobGPTApiClient {
     return this.get<ApplicationStats>('/job-applications/stats', params);
   }
 
-  async getApplication(id: string): Promise<JobApplication> {
-    return this.get<JobApplication>(`/job-applications/${id}`);
+  async getApplication(id: string, opts?: { includeJobListing?: boolean }): Promise<JobApplication> {
+    const query: Record<string, string | number | boolean> = {};
+    if (opts?.includeJobListing) { query.includeJobListing = true; }
+    return this.get<JobApplication>(`/job-applications/${id}`, query);
   }
 
   async updateApplication(id: string, data: Partial<JobApplication>): Promise<JobApplication> {
@@ -511,6 +533,16 @@ export class JobGPTApiClient {
       payload.resumeUri = resumeUri;
     }
     await this.post(`/job-applications/${applicationId}/auto-apply`, payload);
+  }
+
+  async listInterviews(params?: { jobApplicationId?: string; status?: string; upcoming?: boolean; page?: number; limit?: number }): Promise<{ interviews: Interview[]; count: number }> {
+    const query: Record<string, string | number | boolean> = {};
+    if (params?.jobApplicationId) { query.jobApplicationId = params.jobApplicationId; }
+    if (params?.status) { query.status = params.status; }
+    if (params?.upcoming) { query.upcoming = true; }
+    if (params?.page) { query.page = params.page; }
+    if (params?.limit) { query.limit = params.limit; }
+    return this.get<{ interviews: Interview[]; count: number }>('/interviews', query);
   }
 
   async addJobToApplications(jobId: string, jobHuntId: string): Promise<{ id: string; title?: string; company?: string; status?: string; message?: string; existing?: boolean }> {
