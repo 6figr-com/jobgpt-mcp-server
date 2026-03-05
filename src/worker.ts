@@ -70,12 +70,12 @@ export default {
       }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     }
 
-    // Handle root and /mcp paths
+    // Handle unknown paths (return proper error format for OAuth discovery compatibility)
     if (url.pathname !== '/' && url.pathname !== '/mcp') {
-      return new Response(JSON.stringify({
-        name: 'jobgpt-mcp-server',
-        version: '1.0.2',
-      }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'not_found', error_description: 'Not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Only POST is supported for stateless Streamable HTTP transport
@@ -97,7 +97,7 @@ export default {
     }
 
     // Create server + client per request (stateless mode)
-    const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.0.0' });
+    const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.0.2' });
     const client = new JobGPTApiClient({
       apiKey,
       apiUrl: env.BACKEND_URL || 'https://6figr.com',
