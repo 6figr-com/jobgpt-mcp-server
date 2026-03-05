@@ -38,9 +38,9 @@ export default {
       });
     }
 
-    // Extract user's API key from Authorization header
+    // Extract user's API key from Authorization header (supports "Bearer <key>" or raw key)
     const authHeader = request.headers.get('Authorization');
-    const apiKey = authHeader?.replace('Bearer ', '') || '';
+    const apiKey = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader || '';
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'Missing Authorization header. Pass your JobGPT API key as Bearer token.' }), {
         status: 401,
