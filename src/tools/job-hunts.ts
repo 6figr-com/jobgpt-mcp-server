@@ -46,21 +46,25 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
       name: z.string().describe('A name for this job hunt (e.g., "Senior Engineer roles in SF")'),
       config: z.object({
         titles: z.array(z.string()).describe('Job titles to match (required)'),
-        locations: z.array(z.string()).optional().describe('Locations to match. Use plain city names without state abbreviations (e.g., "San Francisco" not "San Francisco, CA"). For states, use the full state name (e.g., "Texas").'),
+        locations: z.array(z.string()).optional().describe('Locations to match. Use plain city names without state abbreviations (e.g., "San Francisco" not "San Francisco, CA"). For states, use the full state name (e.g., "Texas"). Use "Remote" to match remote jobs worldwide without country restrictions.'),
         countries: z.array(z.string()).optional().describe('Country codes (e.g., ["US", "CA"])'),
         companies: z.array(z.string()).optional().describe('Companies to include'),
         excludedCompanies: z.array(z.string()).optional().describe('Companies to exclude'),
         skills: z.array(z.string()).optional().describe('Required skills'),
-        remote: z.boolean().optional().describe('Remote jobs only'),
+        remote: z.boolean().optional().describe('When true, only return remote jobs. When false or omitted, return all jobs (both remote and non-remote).'),
         baseSalaryMin: z.number().optional().describe('Minimum salary'),
         baseSalaryMax: z.number().optional().describe('Maximum salary'),
         expLevels: z.array(z.string()).optional().describe('Experience levels'),
         industries: z.array(z.string()).optional().describe('Industries'),
         companySize: z.array(z.string()).optional().describe('Company sizes'),
         h1bSponsorship: z.boolean().optional().describe('H1B sponsorship required'),
-        relevancy: z.enum(['HIGH', 'MEDIUM']).optional().describe('Search relevancy mode - HIGH for strict title/skills matching (recommended), MEDIUM for broader keyword-based results. Default is null (MEDIUM behavior).'),
+        relevancy: z.enum(['HIGH', 'MEDIUM']).nullable().optional().describe('Search relevancy mode - HIGH for strict title/skills matching (recommended), MEDIUM for broader keyword-based results. Default is null (MEDIUM behavior).'),
+        dateOffset: z.enum(['24H', '1D', '2D', '7D', '14D', '1M', '3M', '6M', '9M', '1Y']).nullable().optional().describe('Only match jobs posted within this time window (e.g., "7D" for last 7 days). Default is "7D".'),
+        workArrangement: z.array(z.string()).optional().describe('Work arrangement filter (e.g., ["Full Time", "Part Time", "Contract", "Internship", "Freelance", "Temporary"]). Defaults to ["Full Time"] if not set.'),
+        excludedKeywords: z.array(z.string()).optional().describe('Keywords to exclude from job results'),
+        excludedTitles: z.array(z.string()).optional().describe('Job titles to exclude from results'),
       }).describe('Search filters configuration'),
-      autoMode: z.boolean().optional().describe('Enable auto-apply mode (default: false). When enabled, jobs matching your criteria will be automatically applied to.'),
+      autoMode: z.boolean().optional().describe('Enable full autopilot mode (default: false). When enabled, jobs are automatically matched, scored against your resume using AI, and applied to if they meet your minMatchScore threshold. Resume customization (if enabled) is applied before each application. Each auto-apply consumes a credit.'),
       dailyLimit: z.number().optional().describe('Maximum jobs to auto-apply per day (default: 5, max: 100)'),
       minMatchScore: z.number().optional().describe('Minimum match score for auto-apply (0-1). Jobs below this score will not be auto-applied. Default is 0.70 (70%) when not explicitly set.'),
       customizeResume: z.boolean().optional().describe('Enable AI resume customization for applications (default: false)'),
@@ -99,26 +103,30 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
     {
       id: z.string().describe('The job hunt ID'),
       name: z.string().optional().describe('New name for the job hunt'),
-      autoMode: z.boolean().optional().describe('Enable/disable auto-apply mode'),
+      autoMode: z.boolean().optional().describe('Enable/disable full autopilot mode. When enabled, jobs are automatically matched, scored against your resume using AI, and applied to if they meet your minMatchScore threshold. Resume customization (if enabled) is applied before each application. Each auto-apply consumes a credit.'),
       dailyLimit: z.number().optional().describe('Maximum jobs to auto-apply per day (max: 100)'),
       minMatchScore: z.number().optional().describe('Minimum match score for auto-apply (0-1). Default is 0.70 (70%) when not explicitly set.'),
       customizeResume: z.boolean().optional().describe('Enable/disable AI resume customization for applications'),
       status: z.enum(['ACTIVE', 'ARCHIVED', 'DELETED']).optional().describe('Job hunt status'),
       config: z.object({
         titles: z.array(z.string()).optional().describe('Job titles to match'),
-        locations: z.array(z.string()).optional().describe('Locations to match. Use plain city names without state abbreviations (e.g., "San Francisco" not "San Francisco, CA"). For states, use the full state name (e.g., "Texas").'),
+        locations: z.array(z.string()).optional().describe('Locations to match. Use plain city names without state abbreviations (e.g., "San Francisco" not "San Francisco, CA"). For states, use the full state name (e.g., "Texas"). Use "Remote" to match remote jobs worldwide without country restrictions.'),
         countries: z.array(z.string()).optional().describe('Country codes'),
         companies: z.array(z.string()).optional().describe('Companies to include'),
         excludedCompanies: z.array(z.string()).optional().describe('Companies to exclude'),
         skills: z.array(z.string()).optional().describe('Required skills'),
-        remote: z.boolean().optional().describe('Remote jobs only'),
+        remote: z.boolean().optional().describe('When true, only return remote jobs. When false or omitted, return all jobs (both remote and non-remote).'),
         baseSalaryMin: z.number().optional().describe('Minimum salary'),
         baseSalaryMax: z.number().optional().describe('Maximum salary'),
         expLevels: z.array(z.string()).optional().describe('Experience levels'),
         industries: z.array(z.string()).optional().describe('Industries'),
         companySize: z.array(z.string()).optional().describe('Company sizes'),
         h1bSponsorship: z.boolean().optional().describe('H1B sponsorship required'),
-        relevancy: z.enum(['HIGH', 'MEDIUM']).optional().describe('Search relevancy mode - HIGH for strict title/skills matching, MEDIUM for broader keyword-based results. Default is null (MEDIUM behavior).'),
+        relevancy: z.enum(['HIGH', 'MEDIUM']).nullable().optional().describe('Search relevancy mode - HIGH for strict title/skills matching, MEDIUM for broader keyword-based results. Default is null (MEDIUM behavior).'),
+        dateOffset: z.enum(['24H', '1D', '2D', '7D', '14D', '1M', '3M', '6M', '9M', '1Y']).nullable().optional().describe('Only match jobs posted within this time window (e.g., "7D" for last 7 days). Default is "7D".'),
+        workArrangement: z.array(z.string()).optional().describe('Work arrangement filter (e.g., ["Full Time", "Part Time", "Contract", "Internship", "Freelance", "Temporary"]). Defaults to ["Full Time"] if not set.'),
+        excludedKeywords: z.array(z.string()).optional().describe('Keywords to exclude from job results'),
+        excludedTitles: z.array(z.string()).optional().describe('Job titles to exclude from results'),
       }).optional().describe('Search filters configuration. REPLACES entire config - include all fields you want to keep.'),
     },
     async (args) => {
@@ -135,7 +143,8 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
         return { content: [{ type: 'text' as const, text: JSON.stringify({ message: 'No fields provided to update' }, null, 2) }] };
       }
 
-      const updated = await client.updateJobHunt(args.id, updateData);
+      await client.updateJobHunt(args.id, updateData);
+      const updated = await client.getJobHunt(args.id);
       return { content: [{ type: 'text' as const, text: JSON.stringify({ message: 'Job hunt updated successfully', jobHunt: formatJobHunt(updated) }, null, 2) }] };
     }
   );

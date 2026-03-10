@@ -190,7 +190,7 @@ function formatApplication(app: JobApplication): Record<string, unknown> {
     autoApplied: app.autoApplied,
     appliedDate: app.appliedDate,
     notes: app.notes,
-    matchScore: app.matchScore ? `${Math.round(app.matchScore * 100)}%` : null,
+    matchScore: app.aiRelevancyScore ? `${Math.round(app.aiRelevancyScore)}%` : null,
     createdAt: app.createdAt,
     updatedAt: app.updatedAt,
   };

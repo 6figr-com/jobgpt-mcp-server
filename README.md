@@ -1,6 +1,6 @@
 # JobGPT MCP Server
 
-The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt) — search jobs, auto-apply to jobs, manage resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
+The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt) — auto apply & search jobs, generate and  manage custom tailored resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
 
 ## What You Can Do
 
@@ -43,7 +43,7 @@ Add the following config to your AI tool. Replace `your-api-key-here` with your 
       "type": "http",
       "url": "https://mcp.6figr.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key-here"
+        "Authorization": "your-api-key-here"
       }
     }
   }
@@ -55,7 +55,7 @@ Add the following config to your AI tool. Replace `your-api-key-here` with your 
 **Option A: One-liner with `claude mcp add`** (fastest):
 
 ```bash
-claude mcp add jobgpt -t http -u https://mcp.6figr.com/mcp --header "Authorization: Bearer your-api-key-here"
+claude mcp add jobgpt -t http -u https://mcp.6figr.com/mcp --header "Authorization: your-api-key-here"
 ```
 
 **Option B: Edit `settings.json` manually**
@@ -69,7 +69,7 @@ Add to `~/.claude/settings.json`:
       "type": "http",
       "url": "https://mcp.6figr.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key-here"
+        "Authorization": "your-api-key-here"
       }
     }
   }
@@ -87,7 +87,7 @@ Go to **Settings** > **MCP** > **Add new MCP server**, or add to `~/.cursor/mcp.
       "type": "http",
       "url": "https://mcp.6figr.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key-here"
+        "Authorization": "your-api-key-here"
       }
     }
   }
@@ -105,7 +105,7 @@ Go to **Settings** > **Cascade** > **MCP** > **Add Server** > **Add custom serve
       "type": "http",
       "url": "https://mcp.6figr.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key-here"
+        "Authorization": "your-api-key-here"
       }
     }
   }
@@ -123,7 +123,7 @@ Open the Cline MCP settings in VS Code and add:
       "type": "http",
       "url": "https://mcp.6figr.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-api-key-here"
+        "Authorization": "your-api-key-here"
       }
     }
   }
@@ -140,7 +140,7 @@ mcpServers:
     type: http
     url: https://mcp.6figr.com/mcp
     headers:
-      Authorization: "Bearer your-api-key-here"
+      Authorization: "your-api-key-here"
 ```
 
 ### Alternative: Run Locally

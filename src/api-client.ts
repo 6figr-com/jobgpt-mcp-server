@@ -144,7 +144,7 @@ export interface JobApplication {
   autoApplied?: boolean;
   appliedDate?: string;
   notes?: string;
-  matchScore?: number;
+  aiRelevancyScore?: number;
   createdAt: string;
   updatedAt: string;
 }
