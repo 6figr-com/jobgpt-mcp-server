@@ -598,6 +598,12 @@ export class JobGPTApiClient {
     return this.post<MatchScoreResponse>(`/job-applications/${applicationId}/match-score`);
   }
 
+  // ==================== Industries ====================
+
+  async getIndustries(): Promise<string[]> {
+    return this.get<string[]>('/industries');
+  }
+
   // ==================== Currencies ====================
 
   async getCurrencies(): Promise<Currency[]> {

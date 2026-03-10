@@ -18,9 +18,8 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
       baseSalaryMax: z.number().optional().describe('Maximum base salary (USD)'),
       expLevels: z.array(z.string()).optional().describe('Experience levels (e.g., ["SE" for Senior, "MI" for Mid-level, "EN" for Entry])'),
       dateOffset: z.enum(['24H', '1D', '2D', '7D', '14D', '1M', '3M', '6M', '9M', '1Y']).optional().describe('Only show jobs posted within this time period (e.g., "2D" for last 2 days)'),
-      industries: z.array(z.string()).optional().describe('Filter by company industries'),
-      companySize: z.array(z.string()).optional().describe('Filter by company size'),
-      companyTags: z.array(z.string()).optional().describe('Filter by company tags (e.g., ["remote", "public", "recent-funding"])'),
+      industries: z.array(z.string()).optional().describe('Filter by company industries (use get_industries to see valid values)'),
+      companySize: z.array(z.string()).optional().describe('Filter by company size (e.g., ["xs" for 1-50, "s" for 50-200, "m" for 200-1K, "l" for 1K-5K, "xl" for 5K+])'),
       h1bSponsorship: z.boolean().optional().describe('Filter for jobs offering H1B sponsorship'),
       limit: z.number().optional().describe('Maximum number of results (default: 5, max: 50). Keep low to avoid large responses.'),
       page: z.number().optional().describe('Page number for pagination (default: 1)'),
@@ -40,7 +39,6 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
       if (args.dateOffset) { filters.dateOffset = args.dateOffset; }
       if (args.industries) { filters.industries = args.industries; }
       if (args.companySize) { filters.companySize = args.companySize; }
-      if (args.companyTags) { filters.companyTags = args.companyTags; }
       if (args.h1bSponsorship !== undefined) { filters.h1bSponsorship = args.h1bSponsorship; }
 
       const result = await client.searchJobs({
@@ -78,6 +76,16 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
           }, null, 2),
         }],
       };
+    }
+  );
+
+  server.tool(
+    'get_industries',
+    'Get the list of valid company industries. Use these values for the "industries" filter in search_jobs, create_job_hunt, or update_job_hunt.',
+    {},
+    async () => {
+      const industries = await client.getIndustries();
+      return { content: [{ type: 'text' as const, text: JSON.stringify({ count: industries.length, industries }, null, 2) }] };
     }
   );
 

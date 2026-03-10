@@ -1,6 +1,6 @@
 {
   "name": "jobgpt-mcp-server",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "MCP (Model Context Protocol) server for JobGPT - AI-powered job search and application management",
   "type": "module",
   "main": "dist/stdio.js",
