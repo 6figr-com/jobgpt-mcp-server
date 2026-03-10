@@ -33,6 +33,8 @@ Add the following config to your AI tool. Replace `your-api-key-here` with your 
 
 ### Claude Desktop
 
+Claude Desktop does not support remote MCP servers directly in the config file. Use the `mcp-remote` bridge to connect (requires Node.js 18+).
+
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
@@ -40,15 +42,23 @@ Add the following config to your AI tool. Replace `your-api-key-here` with your 
 {
   "mcpServers": {
     "jobgpt": {
-      "type": "http",
-      "url": "https://mcp.6figr.com/mcp",
-      "headers": {
-        "Authorization": "your-api-key-here"
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.6figr.com/mcp",
+        "--header",
+        "Authorization:${AUTH_HEADER}"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer your-api-key-here"
       }
     }
   }
 }
 ```
+
+Alternatively, you can add it via **Settings > Connectors** in Claude Desktop using the URL `https://mcp.6figr.com/mcp`.
 
 ### Claude Code (CLI)
 
