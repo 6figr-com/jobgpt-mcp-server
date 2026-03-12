@@ -153,74 +153,23 @@ export function registerResumeTools(server: McpServer, client: JobGPTApiClient) 
 
   server.tool(
     'upload_resume',
-    'Upload a resume from a URL or a local file path. Supported formats: PDF, DOC, DOCX. Maximum file size: 5MB. Provide exactly one of `url` or `filePath`. By default, your profile will be synced with the resume content. Use isAltResume to upload as an alternate resume instead of replacing your primary.',
+    'Upload a resume as base64 file content. Supported formats: PDF, DOC, DOCX. Maximum file size: 5MB. Read the file from the user\'s machine and pass the base64-encoded content. By default, your profile will be synced with the resume content. Use isAltResume to upload as an alternate resume instead of replacing your primary.',
     {
-      url: z.string().optional().describe('The URL of the resume file to upload (must be a direct link to PDF, DOC, or DOCX)'),
-      filePath: z.string().optional().describe('Absolute path to a local resume file to upload (PDF, DOC, or DOCX)'),
+      fileContent: z.string().describe('Base64-encoded file content of the resume. Read the file and pass the base64 content here.'),
+      fileName: z.string().describe('Original filename including extension (e.g. "resume.pdf")'),
       syncProfile: z.boolean().optional().describe('Whether to sync profile with resume content (default: true). Ignored for alt resumes.'),
       isAltResume: z.boolean().optional().describe('Upload as an alternate resume instead of replacing the primary resume (default: false)'),
     },
     async (args) => {
-      const hasUrl = !!args.url;
-      const hasFilePath = !!args.filePath;
-
-      if (hasUrl && hasFilePath) {
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Please provide either a URL or a file path, not both.' }, null, 2) }] };
-      }
-      if (!hasUrl && !hasFilePath) {
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Please provide either a URL or a file path.' }, null, 2) }] };
-      }
-
       const isAlt = args.isAltResume || false;
       const syncProfile = args.syncProfile !== false;
 
-      if (hasFilePath) {
-        // Local file upload via base64
-        let fs: typeof import('node:fs');
-        let path: typeof import('node:path');
-        try {
-          fs = await import('node:fs');
-          path = await import('node:path');
-        } catch {
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Local file upload is not supported in cloud mode. Please use a URL instead.' }, null, 2) }] };
-        }
-
-        if (!fs.existsSync(args.filePath!)) {
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: `File not found: ${args.filePath}` }, null, 2) }] };
-        }
-
-        const fileName = path.basename(args.filePath!);
-        const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-        if (!['pdf', 'docx', 'doc'].includes(ext)) {
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Invalid file type. Supported formats: PDF, DOC, DOCX.' }, null, 2) }] };
-        }
-
-        const fileBuffer = fs.readFileSync(args.filePath!);
-        if (fileBuffer.length === 0) {
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'File is empty.' }, null, 2) }] };
-        }
-        if (fileBuffer.length > 5 * 1024 * 1024) {
-          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'File size exceeds 5MB limit.' }, null, 2) }] };
-        }
-
-        const fileContent = fileBuffer.toString('base64');
-        const result = await client.uploadResumeFromBase64(fileContent, fileName, syncProfile, isAlt);
-        return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              success: true,
-              message: isAlt ? 'Alternate resume uploaded successfully' : 'Resume uploaded successfully',
-              uri: result.uri,
-              fileName: result.fileName,
-              isAltResume: isAlt,
-            }, null, 2),
-          }],
-        };
+      const ext = args.fileName.substring(args.fileName.lastIndexOf('.') + 1).toLowerCase();
+      if (!['pdf', 'docx', 'doc'].includes(ext)) {
+        return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Invalid file type. Supported formats: PDF, DOC, DOCX.' }, null, 2) }] };
       }
 
-      // URL upload (existing behavior)
-      const result = await client.uploadResumeFromUrl(args.url!, syncProfile, isAlt);
+      const result = await client.uploadResumeFromBase64(args.fileContent, args.fileName, syncProfile, isAlt);
       return {
         content: [{
           type: 'text' as const,
