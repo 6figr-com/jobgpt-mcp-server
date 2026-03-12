@@ -1,6 +1,6 @@
 # JobGPT MCP Server
 
-The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt) — auto apply & search jobs, generate and  manage custom tailored resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
+The official [MCP server](https://modelcontextprotocol.io) for [JobGPT](https://6figr.com/jobgpt-ai) — auto apply & search jobs, generate and  manage custom tailored resumes, and track applications directly from Claude, Cursor, Windsurf, and any MCP-compatible AI tool.
 
 <a href="https://glama.ai/mcp/servers/@6figr-com/job-gpt-mcp-server">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@6figr-com/job-gpt-mcp-server/badge" alt="JobGPT Server MCP server" />
@@ -265,7 +265,7 @@ Your API key is invalid or expired. Generate a new one at [6figr.com/account](ht
 
 ### "You have run out of credits"
 
-Some operations (auto-apply, resume generation) consume credits. Purchase more at [6figr.com/jobgpt](https://6figr.com/jobgpt?addCreditsPopup=true).
+Some operations (auto-apply, resume generation) consume credits. Purchase more at [6figr.com/jobgpt](https://6figr.com/jobgpt).
 
 ### Server not appearing in your AI tool
 
@@ -303,6 +303,6 @@ MIT
 
 ## Links
 
-- [JobGPT](https://6figr.com/jobgpt) — AI-powered job search platform
+- [JobGPT](https://6figr.com/jobgpt-ai) — AI-powered job search platform
 - [Get API Key](https://6figr.com/account) — Generate your MCP API key
 - [GitHub Issues](https://github.com/6figr-com/jobgpt-mcp-server/issues) — Report bugs or request features
