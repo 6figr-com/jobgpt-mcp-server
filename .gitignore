@@ -27,3 +27,4 @@ coverage/
 
 # Wrangler
 .wrangler/
+wrangler.jsonc
