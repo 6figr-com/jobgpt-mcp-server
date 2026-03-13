@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { JobGPTApiClient } from './api-client.js';
 import { registerAllTools } from './tools/index.js';
+import glamaConnector from './well-known/glama.json';
 
 interface Env {
   BACKEND_URL: string;
@@ -20,6 +21,11 @@ export default {
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, Mcp-Session-Id, MCP-Protocol-Version',
         },
       });
+    }
+
+    // Serve Glama connector claim file
+    if (url.pathname === '/.well-known/glama.json') {
+      return new Response(JSON.stringify(glamaConnector, null, 2), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     }
 
     // Serve MCP server card for discovery (used by Smithery and other registries)
