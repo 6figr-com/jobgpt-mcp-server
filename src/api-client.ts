@@ -366,6 +366,7 @@ export class JobGPTApiClient {
     this.headers = {
       'Authorization': `Bearer ${config.apiKey}`,
       'Content-Type': 'application/json',
+      'User-Agent': 'mcp 1.0',
     };
   }
 
