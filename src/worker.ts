@@ -96,7 +96,22 @@ export default {
     // Extract user's API key from Authorization header (supports "Bearer <key>" or raw key)
     const authHeader = request.headers.get('Authorization');
     const apiKey = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader || '';
+
+    // Allow unauthenticated discovery requests for scanner (Smithery, etc.)
+    const discoveryMethods = ['initialize', 'tools/list', 'resources/list', 'prompts/list', 'notifications/initialized'];
     if (!apiKey) {
+      try {
+        const body = await request.clone().json() as { method?: string };
+        if (body.method && discoveryMethods.includes(body.method)) {
+          const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.1.4' });
+          registerAllTools(server, new JobGPTApiClient({ apiKey: '', apiUrl: env.BACKEND_URL || 'https://6figr.com', debug: false }));
+          const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+          await server.connect(transport);
+          return transport.handleRequest(request);
+        }
+      } catch (_) {
+        // Not JSON or not a discovery method — fall through to 401
+      }
       return new Response(JSON.stringify({ error: 'Missing Authorization header. Pass your JobGPT API key as Bearer token.' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
