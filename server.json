@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.6figr-com/jobgpt-mcp-server",
+  "title": "JobGPT - Job Search Automation & Auto Apply",
+  "description": "Job search automation, auto apply, resume builder, application tracking, and recruiter outreach",
+  "repository": {
+    "url": "https://github.com/6figr-com/jobgpt-mcp-server",
+    "source": "github"
+  },
+  "version": "1.1.4",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "jobgpt-mcp-server",
+      "version": "1.1.4",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Your JobGPT API key from 6figr.com/account (MCP Integrations section)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "JOBGPT_API_KEY"
+        }
+      ]
+    }
+  ]
+}

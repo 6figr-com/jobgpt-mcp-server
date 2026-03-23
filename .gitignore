@@ -28,3 +28,6 @@ coverage/
 # Wrangler
 .wrangler/
 wrangler.jsonc
+
+# MCP Registry auth tokens
+.mcpregistry_*
