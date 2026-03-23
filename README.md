@@ -13,6 +13,7 @@ Ask your AI assistant things like:
 - *"Find remote senior React jobs paying over $150k"*
 - *"Auto-apply to the top 5 matches from my job hunt"*
 - *"Generate a tailored resume for this Google application"*
+- *"Apply to this job for me - <job_url from company website, greenhouse workday or linkedin, etc>"*
 - *"Show my application stats for the last 7 days"*
 - *"Find recruiters for this job and draft an outreach email"*
 
