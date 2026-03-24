@@ -50,24 +50,42 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
 
   server.tool(
     'get_salary',
-    'Get your current salary/compensation details including base, stocks, bonus, and total compensation',
+    'Get your current salary/compensation details including base, stocks, bonus, and total compensation. IMPORTANT: For INR (currency code 2), values are in lakhs (e.g., 20 = 20 lakhs = 20,00,000 INR). For all other currencies (USD, etc.), values are in thousands (e.g., 400 = 400K = $400,000).',
     {},
     async () => {
       const salary = await client.getProfileSalary();
-      return { content: [{ type: 'text' as const, text: JSON.stringify(salary, null, 2) }] };
+      const isINR = salary.currency === 2;
+      const unit = isINR ? 'lakhs' : 'K';
+      const formatValue = (val: number | undefined) => val !== undefined ? `${val} ${unit}` : undefined;
+      const result = {
+        ...salary,
+        unit,
+        currencyNote: isINR
+          ? 'Values are in lakhs (e.g., 20 = 20,00,000 INR)'
+          : 'Values are in thousands (e.g., 400 = $400,000)',
+        formatted: {
+          base: formatValue(salary.base),
+          stocks: formatValue(salary.stocks),
+          bonus: formatValue(salary.bonus),
+          signingBonus: formatValue(salary.signingBonus),
+          targetSalary: formatValue(salary.targetSalary),
+          totalComp: formatValue(salary.salary),
+        },
+      };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }] };
     }
   );
 
   server.tool(
     'update_salary',
-    'Update your salary/compensation details',
+    'Update your salary/compensation details. IMPORTANT: For INR (currency code 2), pass values in lakhs (e.g., 20 for 20 lakhs). For all other currencies (USD, etc.), pass values in thousands (e.g., 400 for $400K). Use get_currencies to look up currency codes.',
     {
       currency: z.number().optional().describe('Currency code. Use get_currencies to look up valid codes (e.g., 2 = INR, 3 = USD)'),
-      base: z.number().optional().describe('Base salary'),
-      stocks: z.number().optional().describe('Annual stock/equity value'),
-      bonus: z.number().optional().describe('Annual bonus'),
-      signingBonus: z.number().optional().describe('Signing bonus'),
-      targetSalary: z.number().optional().describe('Target salary'),
+      base: z.number().optional().describe('Base salary. For INR: in lakhs (e.g., 20 = 20 lakhs). For USD/others: in thousands (e.g., 400 = $400K)'),
+      stocks: z.number().optional().describe('Annual stock/equity value. Same unit convention as base'),
+      bonus: z.number().optional().describe('Annual bonus. Same unit convention as base'),
+      signingBonus: z.number().optional().describe('Signing bonus. Same unit convention as base'),
+      targetSalary: z.number().optional().describe('Target salary. Same unit convention as base'),
     },
     async (args) => {
       const salaryData: Record<string, unknown> = {};
