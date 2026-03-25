@@ -631,16 +631,16 @@ export class JobGPTApiClient {
 
   // ==================== Recruiters & Referrers ====================
 
-  async getJobRecruiters(jobId: string): Promise<ContactsResponse> {
-    return this.get<ContactsResponse>(`/jobs/${jobId}/recruiters`);
+  async getJobRecruiters(jobId: string, generateEmail = false): Promise<ContactsResponse> {
+    return this.get<ContactsResponse>(`/jobs/${jobId}/recruiters`, { generateEmail });
   }
 
   async getJobReferrers(jobId: string, limit = 2): Promise<ContactsResponse> {
     return this.get<ContactsResponse>(`/jobs/${jobId}/referrers`, { limit });
   }
 
-  async getApplicationRecruiters(applicationId: string): Promise<ContactsResponse> {
-    return this.get<ContactsResponse>(`/job-applications/${applicationId}/recruiters`);
+  async getApplicationRecruiters(applicationId: string, generateEmail = false): Promise<ContactsResponse> {
+    return this.get<ContactsResponse>(`/job-applications/${applicationId}/recruiters`, { generateEmail });
   }
 
   async getApplicationReferrers(applicationId: string, limit = 2): Promise<ContactsResponse> {
