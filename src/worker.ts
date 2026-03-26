@@ -31,7 +31,7 @@ export default {
     // Serve MCP server card for discovery (used by Smithery and other registries)
     if (url.pathname === '/.well-known/mcp/server-card.json') {
       return new Response(JSON.stringify({
-        serverInfo: { name: 'jobgpt-mcp-server', version: '1.1.4' },
+        serverInfo: { name: 'jobgpt-mcp-server', version: '1.2.0' },
         description: 'Job search automation, auto apply, resume generation, application tracking, and recruiter outreach',
         homepage: 'https://6figr.com/jobgpt',
         authentication: { required: true, schemes: ['bearer'] },
@@ -103,7 +103,7 @@ export default {
       try {
         const body = await request.clone().json() as { method?: string };
         if (body.method && discoveryMethods.includes(body.method)) {
-          const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.1.4' });
+          const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.2.0' });
           registerAllTools(server, new JobGPTApiClient({ apiKey: '', apiUrl: env.BACKEND_URL || 'https://6figr.com', debug: false }), 'worker');
           const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
           await server.connect(transport);
@@ -119,7 +119,7 @@ export default {
     }
 
     // Create server + client per request (stateless mode)
-    const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.1.4' });
+    const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.2.0' });
     const client = new JobGPTApiClient({
       apiKey,
       apiUrl: env.BACKEND_URL || 'https://6figr.com',
