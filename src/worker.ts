@@ -61,7 +61,7 @@ export default {
           { name: 'list_resumes', description: 'List your uploaded resumes including primary and alternate versions' },
           { name: 'get_resume', description: 'Get details of a specific uploaded resume including download URL' },
           { name: 'delete_resume', description: 'Delete an uploaded alternate resume from your profile' },
-          { name: 'upload_resume', description: 'Upload a resume as base64 file content. Supported formats: PDF, DOC, DOCX' },
+          { name: 'upload_resume_from_url', description: 'Upload a resume from a publicly accessible URL (Google Drive, Dropbox, etc.). Supported formats: PDF, DOC, DOCX' },
           { name: 'list_generated_resumes', description: 'List AI-generated resumes tailored for specific job applications' },
           { name: 'get_generated_resume', description: 'Get details of a specific AI-generated resume including download URL' },
           { name: 'generate_resume_for_job', description: 'Generate an AI-optimized resume tailored for a specific job application' },
@@ -104,7 +104,7 @@ export default {
         const body = await request.clone().json() as { method?: string };
         if (body.method && discoveryMethods.includes(body.method)) {
           const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.1.4' });
-          registerAllTools(server, new JobGPTApiClient({ apiKey: '', apiUrl: env.BACKEND_URL || 'https://6figr.com', debug: false }));
+          registerAllTools(server, new JobGPTApiClient({ apiKey: '', apiUrl: env.BACKEND_URL || 'https://6figr.com', debug: false }), 'worker');
           const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
           await server.connect(transport);
           return transport.handleRequest(request);
@@ -125,7 +125,7 @@ export default {
       apiUrl: env.BACKEND_URL || 'https://6figr.com',
       debug: false,
     });
-    registerAllTools(server, client);
+    registerAllTools(server, client, 'worker');
 
     // Stateless transport — no session ID
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });

@@ -1,8 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { JobGPTApiClient } from '../api-client.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
-export function registerResumeTools(server: McpServer, client: JobGPTApiClient) {
+export function registerResumeTools(server: McpServer, client: JobGPTApiClient, mode: 'stdio' | 'worker') {
   server.tool(
     'list_resumes',
     'List your uploaded resumes. Returns all resumes you have uploaded to your profile, including your primary resume and any alternate versions.',
@@ -130,46 +132,19 @@ export function registerResumeTools(server: McpServer, client: JobGPTApiClient) 
     }
   );
 
-  // calculate_match_score - temporarily disabled
-  // server.tool(
-  //   'calculate_match_score',
-  //   'Calculate how well your resume matches a job application. Returns a relevancy score and analysis including matching skills, missing skills, and optimization suggestions.',
-  //   {
-  //     applicationId: z.string().describe('The job application ID to calculate match score for'),
-  //   },
-  //   async (args) => {
-  //     const result = await client.calculateMatchScore(args.applicationId);
-  //     const response = {
-  //       applicationId: args.applicationId,
-  //       matchScore: result.relevancyScore >= 0 ? `${Math.round(result.relevancyScore * 100)}%` : 'Unable to calculate',
-  //       justification: result.justification,
-  //       matchingSkills: result.matchingSkills,
-  //       missingSkills: result.missingSkills,
-  //       optimizations: result.optimizations,
-  //     };
-  //     return { content: [{ type: 'text' as const, text: JSON.stringify(response, null, 2) }] };
-  //   }
-  // );
-
+  // URL-based upload — works in both stdio and worker modes
   server.tool(
-    'upload_resume',
-    'Upload a resume as base64 file content. Supported formats: PDF, DOC, DOCX. Maximum file size: 5MB. Read the file from the user\'s machine and pass the base64-encoded content. By default, your profile will be synced with the resume content. Use isAltResume to upload as an alternate resume instead of replacing your primary.',
+    'upload_resume_from_url',
+    'Upload a resume from a publicly accessible URL. Pass a direct link to a PDF, DOC, or DOCX file (e.g. Google Drive share link, Dropbox link, S3 URL). Maximum file size: 5MB. By default, your profile will be synced with the resume content. If the user does not have their resume hosted at a URL, they can upload it directly from their profile at https://6figr.com/profile instead.',
     {
-      fileContent: z.string().describe('Base64-encoded file content of the resume. Read the file and pass the base64 content here.'),
-      fileName: z.string().describe('Original filename including extension (e.g. "resume.pdf")'),
+      url: z.string().url().describe('Publicly accessible URL to the resume file (PDF, DOC, or DOCX)'),
       syncProfile: z.boolean().optional().describe('Whether to sync profile with resume content (default: true). Ignored for alt resumes.'),
       isAltResume: z.boolean().optional().describe('Upload as an alternate resume instead of replacing the primary resume (default: false)'),
     },
     async (args) => {
       const isAlt = args.isAltResume || false;
       const syncProfile = args.syncProfile !== false;
-
-      const ext = args.fileName.substring(args.fileName.lastIndexOf('.') + 1).toLowerCase();
-      if (!['pdf', 'docx', 'doc'].includes(ext)) {
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Invalid file type. Supported formats: PDF, DOC, DOCX.' }, null, 2) }] };
-      }
-
-      const result = await client.uploadResumeFromBase64(args.fileContent, args.fileName, syncProfile, isAlt);
+      const result = await client.uploadResumeFromUrl(args.url, syncProfile, isAlt);
       return {
         content: [{
           type: 'text' as const,
@@ -184,4 +159,53 @@ export function registerResumeTools(server: McpServer, client: JobGPTApiClient) 
       };
     }
   );
+
+  // File path upload — only available in stdio (local) mode
+  if (mode === 'stdio') {
+    server.tool(
+      'upload_resume_from_file',
+      'Upload a resume from a file on the user\'s local machine. Provide the absolute file path to a PDF, DOC, or DOCX file. Maximum file size: 5MB. By default, your profile will be synced with the resume content.',
+      {
+        filePath: z.string().describe('Absolute path to the resume file on the local machine (e.g. "/Users/john/Documents/resume.pdf")'),
+        syncProfile: z.boolean().optional().describe('Whether to sync profile with resume content (default: true). Ignored for alt resumes.'),
+        isAltResume: z.boolean().optional().describe('Upload as an alternate resume instead of replacing the primary resume (default: false)'),
+      },
+      async (args) => {
+        const isAlt = args.isAltResume || false;
+        const syncProfile = args.syncProfile !== false;
+        const fileName = path.basename(args.filePath);
+
+        const ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        if (!['pdf', 'docx', 'doc'].includes(ext)) {
+          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'Invalid file type. Supported formats: PDF, DOC, DOCX.' }, null, 2) }] };
+        }
+
+        if (!fs.existsSync(args.filePath)) {
+          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: `File not found: ${args.filePath}` }, null, 2) }] };
+        }
+
+        const stats = fs.statSync(args.filePath);
+        if (stats.size > 5 * 1024 * 1024) {
+          return { content: [{ type: 'text' as const, text: JSON.stringify({ error: 'File exceeds 5MB limit.' }, null, 2) }] };
+        }
+
+        const fileBuffer = fs.readFileSync(args.filePath);
+        const base64Content = fileBuffer.toString('base64');
+        const result = await client.uploadResumeFromBase64(base64Content, fileName, syncProfile, isAlt);
+
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({
+              success: true,
+              message: isAlt ? 'Alternate resume uploaded successfully' : 'Resume uploaded successfully',
+              uri: result.uri,
+              fileName: result.fileName,
+              isAltResume: isAlt,
+            }, null, 2),
+          }],
+        };
+      }
+    );
+  }
 }

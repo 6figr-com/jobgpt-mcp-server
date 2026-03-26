@@ -12,7 +12,7 @@ async function main(): Promise<void> {
 
     const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.0.0' });
     const client = new JobGPTApiClient(config);
-    registerAllTools(server, client);
+    registerAllTools(server, client, 'stdio');
 
     const transport = new StdioServerTransport();
     await server.connect(transport);
