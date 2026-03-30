@@ -34,6 +34,10 @@ Add the following config to your AI tool. Replace `your-api-key-here` with your 
 
 ---
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/6figr-com-jobgpt-mcp-server).
+
 ## Setup by Client
 
 ### Claude Desktop
