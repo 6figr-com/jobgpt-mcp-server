@@ -103,6 +103,12 @@ export interface Profile {
   experience?: number;
   resumeFileName?: string;
   resumeUri?: string;
+  contactNo?: {
+    dialCode?: string;
+    countryCode?: string;
+    number?: string;
+    e164Number?: string;
+  };
   company?: Array<{
     name: string;
     title: string;

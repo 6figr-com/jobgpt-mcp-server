@@ -7,7 +7,7 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
     'search_jobs',
     'Search for jobs with filters like titles, locations, companies, skills, salary, and remote options. Returns a list of matching job postings.',
     {
-      titles: z.array(z.string()).optional().describe('Job titles to search for (e.g., ["Software Engineer", "Senior Developer"])'),
+      titles: z.array(z.string()).max(6).optional().describe('Job titles to search for (e.g., ["Software Engineer", "Senior Developer"]). Max 6 titles.'),
       locations: z.array(z.string()).optional().describe('Locations to search in (e.g., ["San Francisco", "New York", "Remote"])'),
       countries: z.array(z.string()).optional().describe('Country codes to filter (e.g., ["US", "CA", "UK"])'),
       companies: z.array(z.string()).optional().describe('Specific companies to search (e.g., ["Google", "Meta", "Apple"])'),

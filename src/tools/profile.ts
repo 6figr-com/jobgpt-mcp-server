@@ -29,6 +29,7 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
         skills: profile.skills,
         hasResume: !!profile.resumeFileName,
         resumeFileName: profile.resumeFileName,
+        phoneNumber: profile.contactNo?.e164Number || null,
         workHistory: (profile.company || []).map(c => ({
           company: c.name,
           title: c.title,
@@ -104,19 +105,41 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
     'update_profile',
     'Update your user profile fields',
     {
-      fullName: z.string().optional().describe('Your full name'),
+      firstName: z.string().optional().describe('Your first name'),
+      lastName: z.string().optional().describe('Your last name'),
       headline: z.string().optional().describe('Professional headline (e.g., "Senior Software Engineer at Google")'),
       location: z.string().optional().describe('Your location (e.g., "San Francisco, CA")'),
       skills: z.array(z.string()).optional().describe('List of skills (e.g., ["Python", "JavaScript", "AWS"])'),
       experience: z.number().optional().describe('Years of experience'),
+      phoneNumber: z.string().optional().describe('Phone number without country code (e.g., "4084586677")'),
+      phoneCountryCode: z.string().optional().describe('Phone country dial code with + prefix (e.g., "+1" for US, "+91" for India)'),
+      phoneCountryIso: z.string().optional().describe('ISO country code for the phone number (e.g., "US", "IN")'),
+      noticePeriodDays: z.number().optional().describe('Notice period in days (0-180)'),
+      gender: z.enum(['male', 'female']).optional().describe('Gender'),
+      ethnicity: z.string().optional().describe('Ethnicity'),
+      immigrationSponsorshipRequired: z.boolean().optional().describe('Whether you require immigration/visa sponsorship (e.g., H1B)'),
+      openToRelocation: z.boolean().optional().describe('Whether you are open to relocating for a job'),
+      workPermitLocations: z.array(z.string()).optional().describe('Countries where you have work authorization, as ISO country codes (e.g., ["US", "CA", "GB"])'),
     },
     async (args) => {
       const updateData: Record<string, unknown> = {};
-      if (args.fullName !== undefined) { updateData.fullName = args.fullName; }
+      if (args.firstName !== undefined) { updateData.firstName = args.firstName; }
+      if (args.lastName !== undefined) { updateData.lastName = args.lastName; }
       if (args.headline !== undefined) { updateData.headline = args.headline; }
       if (args.location !== undefined) { updateData.location = args.location; }
       if (args.skills !== undefined) { updateData.skills = args.skills; }
       if (args.experience !== undefined) { updateData.experience = args.experience; }
+      if (args.phoneNumber !== undefined) {
+        updateData.phoneNumber = args.phoneNumber;
+        if (args.phoneCountryCode !== undefined) { updateData.phoneCountryCode = args.phoneCountryCode; }
+        if (args.phoneCountryIso !== undefined) { updateData.phoneCountryIso = args.phoneCountryIso; }
+      }
+      if (args.noticePeriodDays !== undefined) { updateData.noticePeriodDays = args.noticePeriodDays; }
+      if (args.gender !== undefined) { updateData.gender = args.gender; }
+      if (args.ethnicity !== undefined) { updateData.ethnicity = args.ethnicity; }
+      if (args.immigrationSponsorshipRequired !== undefined) { updateData.immigrationSponsorshipRequired = args.immigrationSponsorshipRequired; }
+      if (args.openToRelocation !== undefined) { updateData.openToRelocation = args.openToRelocation; }
+      if (args.workPermitLocations !== undefined) { updateData.workPermitLocations = args.workPermitLocations; }
 
       if (Object.keys(updateData).length === 0) {
         return { content: [{ type: 'text' as const, text: JSON.stringify({ message: 'No fields provided to update' }, null, 2) }] };

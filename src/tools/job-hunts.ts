@@ -45,7 +45,7 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
     {
       name: z.string().describe('A name for this job hunt (e.g., "Senior Engineer roles in SF")'),
       config: z.object({
-        titles: z.array(z.string()).describe('Job titles to match (required)'),
+        titles: z.array(z.string()).max(6).describe('Job titles to match (required, max 6)'),
         locations: z.array(z.string()).optional().describe('Locations to match. Use plain city names without state abbreviations (e.g., "San Francisco" not "San Francisco, CA"). For states, use the full state name (e.g., "Texas"). Use "Remote" to match remote jobs worldwide without country restrictions.'),
         countries: z.array(z.string()).optional().describe('Country codes (e.g., ["US", "CA"])'),
         companies: z.array(z.string()).optional().describe('Companies to include'),
@@ -109,7 +109,7 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
       customizeResume: z.boolean().optional().describe('Enable/disable AI resume customization for applications'),
       status: z.enum(['ACTIVE', 'ARCHIVED', 'DELETED']).optional().describe('Job hunt status'),
       config: z.object({
-        titles: z.array(z.string()).optional().describe('Job titles to match'),
+        titles: z.array(z.string()).max(6).optional().describe('Job titles to match (max 6)'),
         locations: z.array(z.string()).optional().describe('Locations to match. Use plain city names without state abbreviations (e.g., "San Francisco" not "San Francisco, CA"). For states, use the full state name (e.g., "Texas"). Use "Remote" to match remote jobs worldwide without country restrictions.'),
         countries: z.array(z.string()).optional().describe('Country codes'),
         companies: z.array(z.string()).optional().describe('Companies to include'),
