@@ -1,6 +1,6 @@
 {
   "name": "jobgpt-mcp-server",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "MCP server for job search automation, auto apply, resume generation, application tracking, and recruiter outreach",
   "mcpName": "io.github.6figr-com/jobgpt-mcp-server",
   "type": "module",
