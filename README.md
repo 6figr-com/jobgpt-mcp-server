@@ -21,16 +21,19 @@ The MCP server connects your AI assistant to the full JobGPT platform — 34 too
 
 ## Quick Start
 
-### 1. Get Your API Key
+There are two ways to connect, depending on your AI tool:
+
+- **Browser login (recommended for Claude)** — no API key, no JSON, no Node.js. Just add the server URL and sign in to 6figr in your browser. Works with Claude Desktop and Claude Code's native connector UI.
+- **API key** — for Cursor, Windsurf, Cline, Continue, and manual config. Paste a key into the tool's config.
+
+### Get an API Key (only for the API-key method)
 
 1. Go to [6figr.com/account](https://6figr.com/account)
 2. Scroll to **MCP Integrations**
 3. Click **Generate API Key**
-4. Copy the key (starts with `mcp_`)
+4. Copy the key (starts with `sk_`)
 
-### 2. Add to Your AI Tool
-
-Add the following config to your AI tool. Replace `your-api-key-here` with your actual key. No installation required — connects directly to the hosted server.
+> The browser-login method does **not** need this — it fetches your key for you after you sign in.
 
 ---
 
@@ -38,7 +41,16 @@ Add the following config to your AI tool. Replace `your-api-key-here` with your 
 
 ### Claude Desktop
 
-Claude Desktop does not support remote MCP servers directly in the config file. Use the `mcp-remote` bridge to connect (requires Node.js 18+).
+**Recommended — browser login (no API key, no JSON):**
+
+1. Open **Settings → Connectors → Add custom connector**
+2. Name it `JobGPT` and enter the URL `https://mcp.6figr.com/mcp`
+3. Click **Connect** — your browser opens a 6figr sign-in page
+4. Sign in and click **Approve**. Done — the JobGPT tools appear in Claude.
+
+No terminal, no config file, no Node.js. This uses OAuth, so your API key never touches Claude's config — Claude gets a scoped token instead.
+
+**Alternative — API key via `mcp-remote`** (for older Claude Desktop builds that don't show Connectors; requires Node.js 18+):
 
 **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
@@ -63,11 +75,17 @@ Claude Desktop does not support remote MCP servers directly in the config file. 
 }
 ```
 
-Alternatively, you can add it via **Settings > Connectors** in Claude Desktop using the URL `https://mcp.6figr.com/mcp`.
-
 ### Claude Code (CLI)
 
-**Option A: One-liner with `claude mcp add`** (fastest):
+**Recommended — browser login (no API key):** add the server, then authenticate in your browser:
+
+```bash
+claude mcp add jobgpt -t http -u https://mcp.6figr.com/mcp
+```
+
+Then run `/mcp` inside Claude Code, select **jobgpt → Connect**, and sign in to 6figr when the browser opens. Claude Code stores a scoped OAuth token — no API key needed.
+
+**Option A: One-liner with an API key** (`claude mcp add`):
 
 ```bash
 claude mcp add jobgpt -t http -u https://mcp.6figr.com/mcp --header "Authorization: your-api-key-here"
