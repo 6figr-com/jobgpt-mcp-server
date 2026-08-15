@@ -23,8 +23,8 @@ The MCP server connects your AI assistant to the full JobGPT platform — 34 too
 
 There are two ways to connect, depending on your AI tool:
 
-- **Browser login (recommended for Claude)** — no API key, no JSON, no Node.js. Just add the server URL and sign in to 6figr in your browser. Works with Claude Desktop and Claude Code's native connector UI.
-- **API key** — for Cursor, Windsurf, Cline, Continue, and manual config. Paste a key into the tool's config.
+- **Browser login (recommended)** — no API key, no JSON, no Node.js. Just add the server URL and sign in to 6figr in your browser. Works with Claude Desktop, Claude Code, Codex CLI (`codex mcp login`), and ChatGPT Web (Developer Mode).
+- **API key** — for the ChatGPT Desktop app, Cursor, Windsurf, Cline, Continue, and manual config. Paste a key into the tool's config.
 
 ### Get an API Key (only for the API-key method)
 
@@ -108,6 +108,38 @@ Add to `~/.claude/settings.json`:
   }
 }
 ```
+
+### Codex CLI (ChatGPT)
+
+**Recommended — browser login (no API key):** add the server, then authenticate in your browser:
+
+```bash
+codex mcp add jobgpt --url https://mcp.6figr.com/mcp
+codex mcp login jobgpt
+```
+
+`codex mcp login` opens a browser to sign in to 6figr and approve access; Codex stores a scoped OAuth token (OAuth 2.1 + PKCE). No API key needed.
+
+**Alternative — API key via header:**
+
+```bash
+codex mcp add jobgpt --url https://mcp.6figr.com/mcp --header "Authorization: Bearer your-api-key-here"
+```
+
+### ChatGPT
+
+ChatGPT connects two different ways depending on where you add the server:
+
+**ChatGPT Desktop app — API key.** Open **Settings → Connectors → Advanced/Developer → Connect to a custom MCP** and fill in:
+
+- **Name:** `JobGPT`
+- **Type:** `Streamable HTTP`
+- **URL:** `https://mcp.6figr.com/mcp`
+- **Headers → Add header:** Key `Authorization`, Value `Bearer your-api-key-here`
+
+The desktop dialog authenticates by header (there's no browser-login button), so use your `sk_` key here. Leave the env-var fields blank.
+
+**ChatGPT Web (Developer Mode) — browser login (OAuth).** On the web app, enable **Settings → Connectors → Advanced → Developer mode**, then **Add custom connector**, name it `JobGPT`, and enter the URL `https://mcp.6figr.com/mcp`. ChatGPT runs the OAuth flow: sign in to 6figr in the popup and approve. No API key needed. (Developer mode is available on Plus, Pro, Business, Enterprise, and Edu plans.)
 
 ### Cursor
 
