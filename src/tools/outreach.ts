@@ -5,7 +5,7 @@ import { JobGPTApiClient, ContactWithEmail } from '../api-client.js';
 export function registerOutreachTools(server: McpServer, client: JobGPTApiClient) {
   server.tool(
     'get_job_recruiters',
-    'Get recruiters who posted or are associated with a specific job. Returns contact info including email and LinkedIn.',
+    "Get the recruiter for a specific job, matched to the role's function. Returns contact info including email and LinkedIn. If nobody is found the call fails with a not-found message; if the lookup fails, try again in a minute.",
     {
       jobId: z.string().describe('The job ID to find recruiters for'),
     },
@@ -17,10 +17,10 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
 
   server.tool(
     'get_job_referrers',
-    'Find potential referrers at a company for a specific job. Returns people who might be able to refer you based on your network and the job.',
+    "Find who to ask about a specific job: the hiring manager when JobGPT is confident, otherwise a peer who could refer you. slot ('hiring_manager' or 'referral') says which. If nobody is found the call fails with a not-found message; if the lookup fails, try again in a minute.",
     {
       jobId: z.string().describe('The job ID to find referrers for'),
-      limit: z.number().optional().describe('Maximum number of referrers to return (default: 2, max: 2)'),
+      limit: z.number().optional().describe('Maximum number of contacts to return (default: 2, max: 2)'),
     },
     async (args) => {
       const result = await client.getJobReferrers(args.jobId, Math.min(args.limit || 2, 2));
@@ -30,7 +30,7 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
 
   server.tool(
     'get_application_recruiters',
-    'Get recruiters for a job application you have saved. Returns contact info for reaching out.',
+    "Get the recruiter for a saved job application, matched to the role's function. Returns contact info for reaching out. alreadyContacted ({date}) is set when JobGPT already emailed this person for this application. If nobody is found the call fails with a not-found message; if the lookup fails, try again in a minute.",
     {
       applicationId: z.string().describe('The job application ID'),
     },
@@ -42,10 +42,10 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
 
   server.tool(
     'get_application_referrers',
-    'Find potential referrers for a job application. Returns people at the company who might refer you.',
+    "Find who to ask about a saved job application: the hiring manager when JobGPT is confident, otherwise a peer who could refer you. slot ('hiring_manager' or 'referral') says which. alreadyContacted ({date}) is set when JobGPT already emailed this person for this application. If nobody is found the call fails with a not-found message; if the lookup fails, try again in a minute.",
     {
       applicationId: z.string().describe('The job application ID'),
-      limit: z.number().optional().describe('Maximum number of referrers to return (default: 2, max: 2)'),
+      limit: z.number().optional().describe('Maximum number of contacts to return (default: 2, max: 2)'),
     },
     async (args) => {
       const result = await client.getApplicationReferrers(args.applicationId, Math.min(args.limit || 2, 2));
@@ -125,5 +125,7 @@ function formatContact(item: ContactWithEmail): Record<string, unknown> {
     linkedinUrl: c.linkedinUrl,
     emailTemplate: item.emailTemplate,
     subject: item.subject,
+    slot: item.slot,
+    alreadyContacted: item.alreadyContacted,
   };
 }
