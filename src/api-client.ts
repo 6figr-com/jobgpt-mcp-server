@@ -321,9 +321,13 @@ export interface Contact {
 }
 
 export interface ContactWithEmail {
-  emailTemplate: string;
-  subject: string;
+  emailTemplate: string | null;
+  subject: string | null;
   contact: Contact;
+  // The referrer endpoints return a hiring manager when confident, else a peer
+  slot?: 'recruiter' | 'hiring_manager' | 'referral';
+  // Job-application endpoints only: JobGPT already emailed this person for this application
+  alreadyContacted?: { date: string; persona?: string };
 }
 
 export interface ContactsResponse {
