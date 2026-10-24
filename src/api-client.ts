@@ -667,8 +667,12 @@ export class JobGPTApiClient {
     return this.get<OutreachListResponse>('/outreaches', query);
   }
 
-  async createOutreach(applicationId: string, contactId: string, subject: string, body: string): Promise<Outreach> {
-    return this.post<Outreach>(`/job-applications/${applicationId}/outreaches`, { contactId, subject, body });
+  async createOutreach(applicationId: string, contactId: string, subject: string, body: string, slot?: 'recruiter' | 'hiring_manager' | 'referral'): Promise<Outreach> {
+    const payload: Record<string, string> = { contactId, subject, body };
+    if (slot) {
+      payload.slot = slot;
+    }
+    return this.post<Outreach>(`/job-applications/${applicationId}/outreaches`, payload);
   }
 
   // ==================== Email Templates ====================
