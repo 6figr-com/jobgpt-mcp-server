@@ -92,9 +92,10 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
       contactId: z.string().describe('The contact ID (from get_application_recruiters or get_application_referrers)'),
       subject: z.string().describe('Email subject line'),
       body: z.string().describe('Email body content'),
+      slot: z.enum(['recruiter', 'hiring_manager', 'referral']).optional().describe('The slot returned by the contact tools; pass it through so the outreach is recorded correctly'),
     },
     async (args) => {
-      const result = await client.createOutreach(args.applicationId, args.contactId, args.subject, args.body);
+      const result = await client.createOutreach(args.applicationId, args.contactId, args.subject, args.body, args.slot);
       return {
         content: [{
           type: 'text' as const,
