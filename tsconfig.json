@@ -16,5 +16,5 @@
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests", "src/worker.ts", "src/env.d.ts"]
+  "exclude": ["node_modules", "dist", "tests", "src/worker.ts", "src/oauth.ts", "src/env.d.ts"]
 }
