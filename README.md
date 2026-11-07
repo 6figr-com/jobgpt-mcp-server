@@ -263,7 +263,7 @@ If you prefer to run the server on your machine (requires Node.js 18+):
 | Tool | Description |
 |------|-------------|
 | `get_application_stats` | Aggregated stats — counts by status, auto-apply metrics |
-| `list_applications` | List applications filtered by job hunt or status |
+| `list_applications` | List applications filtered by job hunt, status, or a company/title search |
 | `get_application` | Get full application details |
 | `update_application` | Update status or notes |
 | `apply_to_job` | Trigger auto-apply for an application |

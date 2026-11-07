@@ -182,6 +182,7 @@ function formatJobHunt(jobHunt: JobHunt): Record<string, unknown> {
   };
 }
 
-function isUnknownQueryKeyError(error: unknown): boolean {
+// JobGPT servers reject query keys they don't know yet with a Joi 400 ('"x" is not allowed')
+export function isUnknownQueryKeyError(error: unknown): boolean {
   return error instanceof Error && /API Error \(400\)/.test(error.message) && /not allowed/.test(error.message);
 }

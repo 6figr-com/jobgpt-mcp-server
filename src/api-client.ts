@@ -558,10 +558,12 @@ export class JobGPTApiClient {
 
   // ==================== Applications ====================
 
-  async listApplications(params: { jobHuntId?: string; status?: string; page?: number; limit?: number }): Promise<{ applications: JobApplication[]; count: number }> {
+  async listApplications(params: { jobHuntId?: string; status?: string; search?: string; page?: number; limit?: number }): Promise<{ applications: JobApplication[]; count: number }> {
     const query: Record<string, string | number | boolean> = {};
     if (params.jobHuntId) { query.jobHuntId = params.jobHuntId; }
     if (params.status) { query.status = params.status; }
+    // search is only sent when set: bane before the MCP search deploy 400s on unknown query keys
+    if (params.search) { query.search = params.search; }
     if (params.page) { query.page = params.page; }
     if (params.limit) { query.limit = params.limit; }
     const result = await this.get<{ jobs: JobApplication[]; count: number }>('/job-applications', query);

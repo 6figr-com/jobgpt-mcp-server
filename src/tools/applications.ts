@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { JobGPTApiClient, JobApplication, Interview } from '../api-client.js';
+import { isUnknownQueryKeyError } from './job-hunts.js';
 
 export function registerApplicationTools(server: McpServer, client: JobGPTApiClient) {
   server.tool(
@@ -18,21 +19,40 @@ export function registerApplicationTools(server: McpServer, client: JobGPTApiCli
 
   server.tool(
     'list_applications',
-    'List your job applications, optionally filtered by job hunt or status',
+    'List your job applications, newest first, optionally filtered by job hunt, status, or a company/title search',
     {
       jobHuntId: z.string().optional().describe('Filter by job hunt ID'),
       status: z.string().optional().describe('Filter by status (e.g., "PENDING", "APPLIED", "INTERVIEW", "OFFER", "REJECTED")'),
+      search: z.string().max(100).optional().describe('Only applications whose company name or job title contains this text (case-insensitive), e.g. "anthropic" or "data engineer"'),
       page: z.number().optional().describe('Page number (default: 1)'),
       limit: z.number().optional().describe('Number of results per page (default: 20, max: 50)'),
     },
     async (args) => {
-      const result = await client.listApplications({
-        jobHuntId: args.jobHuntId,
-        status: args.status,
-        page: args.page || 1,
-        limit: args.limit || 20,
-      });
-      return { content: [{ type: 'text' as const, text: JSON.stringify({ count: result.count, applications: result.applications.map(formatApplication) }, null, 2) }] };
+      const search = args.search ? args.search.trim() : '';
+      const params = { jobHuntId: args.jobHuntId, status: args.status, page: args.page || 1, limit: args.limit || 20 };
+      let result: { applications: JobApplication[]; count: number };
+      let note: string | undefined;
+      if (!search) {
+        result = await client.listApplications(params);
+      } else {
+        try {
+          result = await client.listApplications({ ...params, search });
+        } catch (error) {
+          if (!isUnknownQueryKeyError(error)) {
+            throw error;
+          }
+          // JobGPT server without search support: fetch the same page unfiltered and filter it here
+          const page = await client.listApplications(params);
+          const matches = page.applications.filter(app => applicationMatches(app, search));
+          result = { applications: matches, count: matches.length };
+          note = `The JobGPT server does not support search yet, so only page ${params.page} (${page.applications.length} of ${page.count} applications) was searched. count is the number of matches on that page; check other pages for more.`;
+        }
+      }
+      const response: Record<string, unknown> = { count: result.count, applications: result.applications.map(formatApplication) };
+      if (note) {
+        response.note = note;
+      }
+      return { content: [{ type: 'text' as const, text: JSON.stringify(response, null, 2) }] };
     }
   );
 
@@ -175,6 +195,14 @@ function formatInterview(interview: Interview): Record<string, unknown> {
     notes: interview.notes,
     status: interview.status,
   };
+}
+
+// Case-insensitive substring match on company name or title, mirroring the server-side search
+function applicationMatches(app: JobApplication, search: string): boolean {
+  const needle = search.toLowerCase();
+  const company = app.company as unknown;
+  const companyName = typeof company === 'string' ? company : (company && typeof company === 'object' ? String((company as { name?: unknown }).name || '') : '');
+  return companyName.toLowerCase().includes(needle) || String(app.title || '').toLowerCase().includes(needle);
 }
 
 function formatApplication(app: JobApplication): Record<string, unknown> {
