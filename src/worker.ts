@@ -87,6 +87,15 @@ export function serveWellKnown(pathname: string): Response | null {
 // Build an MCP response for a given (already-resolved) API key. Shared by the
 // legacy raw-sk_ path and the OAuth apiHandler.
 export async function serveMcp(request: Request, apiKey: string, backendUrl: string): Promise<Response> {
+  // Stateless server: no server-initiated messages, so no standalone SSE stream.
+  // Without this, GET opens a stream that never writes, the Workers runtime kills
+  // it as hung, and SDK clients reconnect ~1/sec (each one an OAuth KV read).
+  if (request.method === 'GET') {
+    return new Response(JSON.stringify({ error: 'Method not allowed. This server does not offer a GET SSE stream.' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json', 'Allow': 'POST, OPTIONS' },
+    });
+  }
   const server = new McpServer({ name: 'jobgpt-mcp-server', version: SERVER_VERSION });
   const client = new JobGPTApiClient({ apiKey, apiUrl: backendUrl || 'https://6figr.com', debug: false });
   registerAllTools(server, client, 'worker');
