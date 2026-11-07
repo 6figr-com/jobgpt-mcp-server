@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { JobGPTApiClient } from './api-client.js';
 import { registerAllTools } from './tools/index.js';
+import { SERVER_VERSION } from './version.js';
 import glamaConnector from './well-known/glama.json';
 
 export interface Env {
@@ -11,8 +12,6 @@ export interface Env {
   MCP_OAUTH_SECRET: string;
   MCP_WORKER_TOKEN: string;
 }
-
-const SERVER_VERSION = '1.3.0';
 
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
