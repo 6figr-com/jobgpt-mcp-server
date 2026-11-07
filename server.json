@@ -7,12 +7,12 @@
     "url": "https://github.com/6figr-com/jobgpt-mcp-server",
     "source": "github"
   },
-  "version": "1.1.4",
+  "version": "1.4.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "jobgpt-mcp-server",
-      "version": "1.1.4",
+      "version": "1.4.0",
       "transport": {
         "type": "stdio"
       },

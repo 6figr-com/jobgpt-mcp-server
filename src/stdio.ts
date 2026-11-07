@@ -4,13 +4,14 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { loadConfig, log } from './config.js';
 import { JobGPTApiClient } from './api-client.js';
 import { registerAllTools } from './tools/index.js';
+import { SERVER_VERSION } from './version.js';
 
 async function main(): Promise<void> {
   try {
     const config = loadConfig();
     log('Configuration loaded');
 
-    const server = new McpServer({ name: 'jobgpt-mcp-server', version: '1.0.0' });
+    const server = new McpServer({ name: 'jobgpt-mcp-server', version: SERVER_VERSION });
     const client = new JobGPTApiClient(config);
     registerAllTools(server, client, 'stdio');
 
