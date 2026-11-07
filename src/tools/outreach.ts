@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { JobGPTApiClient, ContactWithEmail } from '../api-client.js';
+import { resolveApplicationId } from './application-id.js';
 
 export function registerOutreachTools(server: McpServer, client: JobGPTApiClient) {
   server.tool(
@@ -117,33 +118,6 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
       };
     }
   );
-}
-
-// send_outreach takes an applicationId, or a jobId that is saved to applications first.
-// bane's create-application returns the user's existing application for the same job instead of a duplicate.
-async function resolveApplicationId(client: JobGPTApiClient, args: { applicationId?: string; jobId?: string; jobHuntId?: string }): Promise<string> {
-  if (args.applicationId && args.jobId) {
-    throw new Error('Pass either applicationId or jobId, not both.');
-  }
-  if (args.applicationId) {
-    return args.applicationId;
-  }
-  if (!args.jobId) {
-    throw new Error('applicationId or jobId is required.');
-  }
-  let jobHuntId = args.jobHuntId;
-  if (!jobHuntId) {
-    const hunts = await client.listJobHunts({ page: 1, limit: 1 });
-    if (!hunts.jobHunts.length) {
-      throw new Error('You have no active job hunt to save this job under. Create one with create_job_hunt, or pass jobHuntId.');
-    }
-    jobHuntId = hunts.jobHunts[0].id;
-  }
-  const application = await client.addJobToApplications(args.jobId, jobHuntId);
-  if (!application || !application.id) {
-    throw new Error(`Could not add job ${args.jobId} to your applications.`);
-  }
-  return application.id;
 }
 
 function formatContact(item: ContactWithEmail): Record<string, unknown> {

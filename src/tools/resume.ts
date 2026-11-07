@@ -1,8 +1,36 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { JobGPTApiClient } from '../api-client.js';
+import { JobGPTApiClient, GeneratedResumeJsonResponse } from '../api-client.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import { resolveApplicationId } from './application-id.js';
+
+export const GENERATE_RESUME_DESCRIPTION = 'Tailor the user\'s resume for one job: makes a new AI-tailored copy of their resume for that job. Use it for any resume tailoring request, e.g. "tailor / customize / update my resume for this job", "highlight my X work", "add skill Y", "make the summary shorter". Pass applicationId for a saved application, or jobId for a job from search_jobs / match_jobs (it is first added to the user\'s applications, reusing their existing application for that job). Map the ask to arguments: "highlight / emphasize X" -> modifications; "add skill or keyword Y" -> keywords, plus a modifications line when they want it worked into their experience (e.g. "Add Java to my experience at Tesla"); "shorter summary" or "rewrite my summary" -> sections ["summary"] plus a modifications line saying how. Pass the user\'s asks through as they phrase them. Every run starts from the user\'s base resume, never from an earlier tailored copy, so for a follow-up edit on the same job include the earlier asks again with the new one. Set generatePdf: true when the user wants a file to download or send; only then is the copy saved (with a generatedResumeId, filename and download link, and listed by list_generated_resumes). Without it you get the tailored resume JSON only. The base resume is never changed. This does not apply to the job and costs no credits. Takes up to about a minute.';
+
+// generate_resume_for_job result. bane only stores a GeneratedResume (id + PDF) when generatePdf is set;
+// without it the tailored JSON is all there is. bane's response has no filename, so it is read back by id.
+async function generatedResumeResponse(client: JobGPTApiClient, applicationId: string, pdfRequested: boolean, result: GeneratedResumeJsonResponse): Promise<Record<string, unknown>> {
+  const response: Record<string, unknown> = { message: 'Tailored resume generated (JSON only, not saved). Call again with generatePdf: true for a downloadable PDF copy.', applicationId };
+  if (result.generatedResumeId) {
+    response.generatedResumeId = result.generatedResumeId;
+  }
+  if (result.pdfUrl) {
+    response.message = 'Tailored resume saved as a PDF. The download link expires in about an hour; get_generated_resume with generatedResumeId gives a fresh one.';
+    response.downloadUrl = result.pdfUrl;
+    response.pdfUrl = result.pdfUrl;
+    if (result.generatedResumeId) {
+      const saved = await client.getGeneratedResume(result.generatedResumeId).catch(() => null);
+      if (saved && saved.resumeFileName) {
+        response.filename = saved.resumeFileName;
+      }
+    }
+  } else if (pdfRequested) {
+    response.message = 'Tailored resume generated, but the PDF could not be made, so nothing was saved. Try again with generatePdf: true.';
+  }
+  response.addedKeywords = result.addedKeywords;
+  response.resumeJson = result.jsonResume;
+  return response;
+}
 
 export function registerResumeTools(server: McpServer, client: JobGPTApiClient, mode: 'stdio' | 'worker') {
   server.tool(
@@ -103,32 +131,25 @@ export function registerResumeTools(server: McpServer, client: JobGPTApiClient, 
 
   server.tool(
     'generate_resume_for_job',
-    'Generate an AI-optimized resume tailored for a specific job application. This creates a customized version of your resume highlighting relevant skills and experience for the job. Returns JSON resume data.',
+    GENERATE_RESUME_DESCRIPTION,
     {
-      applicationId: z.string().describe('The job application ID to generate a resume for'),
-      modifications: z.array(z.string()).optional().describe('Custom modifications or instructions for resume customization'),
-      keywords: z.array(z.string()).optional().describe('Specific keywords to emphasize in the resume'),
-      sections: z.array(z.enum(['summary', 'basics', 'work', 'education', 'skills', 'projects', 'certificates', 'awards', 'volunteer', 'publications', 'languages', 'interests', 'references'])).optional().describe('Which resume sections to AI-enhance. Defaults to ["summary", "work", "skills"] if not specified.'),
-      generatePdf: z.boolean().optional().describe('Generate a downloadable PDF from the resume (default: false). When true, returns a PDF download URL.'),
+      applicationId: z.string().optional().describe('A saved job application ID (from list_applications or get_application). Pass this or jobId.'),
+      jobId: z.string().optional().describe('A job ID (from search_jobs, match_jobs or get_job) for a job the user has not saved yet; it is added to their applications first. Pass this or applicationId.'),
+      jobHuntId: z.string().optional().describe('With jobId only: the job hunt to save the job under. Defaults to the most recently updated active job hunt.'),
+      modifications: z.array(z.string()).optional().describe('The user\'s asks in their own words, one per item, e.g. "Highlight the Kafka and data pipeline work", "Keep the summary to 2 sentences, focused on leadership", "Add Java to my experience at Tesla". Leave it out for a plain "tailor my resume for this job" with no other ask. On a follow-up for the same job, include the earlier asks again.'),
+      keywords: z.array(z.string()).optional().describe('Skills or keywords to add or emphasize, as short names, e.g. ["Java", "Spring Boot"].'),
+      sections: z.array(z.enum(['summary', 'basics', 'work', 'education', 'skills', 'projects', 'certificates', 'awards', 'volunteer', 'publications', 'languages', 'interests', 'references'])).optional().describe('Resume sections to rewrite. Defaults to ["summary", "work", "skills"]. Only the summary: ["summary"].'),
+      generatePdf: z.boolean().optional().describe('true when the user wants a file to download or send: saves the tailored copy as a PDF and returns generatedResumeId, filename and downloadUrl. Default false: returns the tailored resume JSON only and saves nothing.'),
     },
     async (args) => {
-      const result = await client.generateResumeForJob(args.applicationId, {
+      const applicationId = await resolveApplicationId(client, args);
+      const result = await client.generateResumeForJob(applicationId, {
         modifications: args.modifications,
         keywords: args.keywords,
         sections: args.sections,
         generatePdf: args.generatePdf,
       });
-      const response: Record<string, unknown> = {
-        message: 'Resume generation complete',
-        resumeJson: result.jsonResume,
-        addedKeywords: result.addedKeywords,
-      };
-      if (result.pdfUrl) {
-        response.pdfUrl = result.pdfUrl;
-        response.generatedResumeId = result.generatedResumeId;
-        response.message = 'Resume generated with downloadable PDF';
-      }
-      return { content: [{ type: 'text' as const, text: JSON.stringify(response, null, 2) }] };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(await generatedResumeResponse(client, applicationId, !!args.generatePdf, result), null, 2) }] };
     }
   );
 

@@ -280,7 +280,7 @@ If you prefer to run the server on your machine (requires Node.js 18+):
 | `upload_resume` | Upload a resume from URL (PDF, DOC, DOCX) |
 | `list_generated_resumes` | List AI-tailored resumes created for applications |
 | `get_generated_resume` | Get a generated resume's download URL |
-| `generate_resume_for_job` | Generate an AI-optimized resume for a specific application |
+| `generate_resume_for_job` | Tailor your resume for one job (a saved application or a job ID from search) with your own asks, keywords and sections; optional downloadable PDF |
 | `calculate_match_score` | Calculate resume-to-job match score with skill analysis |
 
 ### Outreach
