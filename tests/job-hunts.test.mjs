@@ -99,3 +99,34 @@ describe('job hunt config schemas', () => {
     expect(client.searchJobs.mock.calls[0][0].filters).toEqual({ titles: ['Engineer'], workAuthorization: ['h1b'] });
   });
 });
+
+describe('JobGPTApiClient.listJobHunts', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  async function queryFor(...args) {
+    const { JobGPTApiClient } = await import('../dist/api-client.js');
+    let calledUrl = '';
+    globalThis.fetch = async (url) => {
+      calledUrl = String(url);
+      return new Response(JSON.stringify({ success: true, data: { jobHunts: [], autoApplyQuota: 0, autoApplyQuotaRemaining: 0 } }), { status: 200 });
+    };
+    const client = new JobGPTApiClient({ apiKey: 'test', apiUrl: 'https://example.test', debug: false });
+    await client.listJobHunts(...args);
+    return new URL(calledUrl).searchParams;
+  }
+
+  test('only sends status and includeStats when set', async () => {
+    const plain = await queryFor({});
+    expect([...plain.keys()].sort()).toEqual(['limit', 'page']);
+    const full = await queryFor({ status: 'ALL', includeStats: true, page: 2, limit: 5 });
+    expect(Object.fromEntries(full)).toEqual({ page: '2', limit: '5', status: 'ALL', includeStats: 'true' });
+  });
+
+  test('keeps the old positional (page, limit) signature', async () => {
+    const q = await queryFor(3, 7);
+    expect(Object.fromEntries(q)).toEqual({ page: '3', limit: '7' });
+  });
+});

@@ -530,7 +530,9 @@ export class JobGPTApiClient {
 
   // ==================== Job Hunts ====================
 
-  async listJobHunts(params: JobHuntListParams = {}): Promise<JobHuntListResponse> {
+  // Also accepts the pre-1.4 positional form listJobHunts(page, limit)
+  async listJobHunts(pageOrParams: number | JobHuntListParams = {}, limit?: number): Promise<JobHuntListResponse> {
+    const params: JobHuntListParams = typeof pageOrParams === 'number' ? { page: pageOrParams, limit } : pageOrParams;
     // status / includeStats are only sent when set: bane before the MCP list deploy 400s on unknown query keys
     const query: Record<string, string | number | boolean> = { page: params.page || 1, limit: params.limit || 20 };
     if (params.status) {
