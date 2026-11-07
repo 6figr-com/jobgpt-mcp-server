@@ -100,7 +100,7 @@ export function registerApplicationTools(server: McpServer, client: JobGPTApiCli
 
   server.tool(
     'add_job_to_applications',
-    'Add a job from search results to your applications. Use this when a user wants to save/track a job they found.',
+    'Add a job from search results to your applications. Use this when a user wants to save/track a job they found. If you already have an application for the same job, that application is returned instead of a duplicate.',
     {
       jobId: z.string().describe('The job ID to add to applications'),
       jobHuntId: z.string().describe('The job hunt ID to add this job to'),

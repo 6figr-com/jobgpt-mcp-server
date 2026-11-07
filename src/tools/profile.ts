@@ -15,7 +15,7 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
 
   server.tool(
     'get_profile',
-    'Get your user profile including personal info, skills, experience, and work history',
+    'Get your user profile including personal info, skills, experience, work history, and the job-application details that update_profile sets (notice period, work authorization, sponsorship, relocation, gender, ethnicity).',
     {},
     async () => {
       const profile = await client.getProfile();
@@ -23,6 +23,8 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
         id: profile.id,
         email: profile.email,
         name: profile.fullName,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
         headline: profile.headline,
         location: profile.location,
         yearsOfExperience: profile.experience,
@@ -30,6 +32,12 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
         hasResume: !!profile.resumeFileName,
         resumeFileName: profile.resumeFileName,
         phoneNumber: profile.contactNo?.e164Number || null,
+        noticePeriodDays: profile.noticePeriodDays ?? null,
+        workPermitLocations: profile.workPermitLocations || [],
+        immigrationSponsorshipRequired: profile.immigrationSponsorshipRequired ?? null,
+        openToRelocation: profile.openToRelocation ?? null,
+        gender: formatGender(profile.gender),
+        ethnicity: profile.ethnicity || null,
         workHistory: (profile.company || []).map(c => ({
           company: c.name,
           title: c.title,
@@ -119,7 +127,7 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
       ethnicity: z.string().optional().describe('Ethnicity'),
       immigrationSponsorshipRequired: z.boolean().optional().describe('Whether you require immigration/visa sponsorship (e.g., H1B)'),
       openToRelocation: z.boolean().optional().describe('Whether you are open to relocating for a job'),
-      workPermitLocations: z.array(z.string()).optional().describe('Countries where you have work authorization, as ISO country codes (e.g., ["US", "CA", "GB"])'),
+      workPermitLocations: z.array(z.string()).optional().describe('Countries where you can already work without visa sponsorship. Replaces the saved list. Country names or ISO codes both work (e.g., ["United States", "Canada"] or ["US", "CA"]): auto-apply reads this list as text when it answers work-authorization questions on application forms. Keep it consistent with immigrationSponsorshipRequired.'),
     },
     async (args) => {
       const updateData: Record<string, unknown> = {};
@@ -149,4 +157,15 @@ export function registerProfileTools(server: McpServer, client: JobGPTApiClient)
       return { content: [{ type: 'text' as const, text: JSON.stringify({ message: 'Profile updated successfully', updatedFields: Object.keys(updateData) }, null, 2) }] };
     }
   );
+}
+
+// bane stores gender as 'M' / 'F'; report it in the 'male' / 'female' form update_profile takes
+function formatGender(gender?: string): string | null {
+  if (gender === 'M') {
+    return 'male';
+  }
+  if (gender === 'F') {
+    return 'female';
+  }
+  return gender || null;
 }

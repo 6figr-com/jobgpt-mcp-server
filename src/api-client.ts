@@ -123,6 +123,14 @@ export interface Profile {
     specialization?: string;
     year?: string;
   }>;
+  noticePeriodDays?: number;
+  // Stored as 'M' / 'F'; update_profile takes 'male' / 'female'
+  gender?: string;
+  ethnicity?: string;
+  immigrationSponsorshipRequired?: boolean;
+  openToRelocation?: boolean;
+  // Free text (country names or ISO codes); passed as-is to the auto-apply form filler
+  workPermitLocations?: string[];
 }
 
 export interface JobHunt {
@@ -134,8 +142,37 @@ export interface JobHunt {
   minMatchScore?: number;
   customizeResume?: boolean;
   config: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // bane's JobHunt timestamps (createdAt/updatedAt are never set)
+  dateCreated?: string;
+  dateUpdated?: string;
+  // Only with list_job_hunts includeStats (needs the bane MCP list deploy)
+  stats?: JobHuntStats;
+}
+
+export interface JobHuntStats {
+  matched: number;
+  applications: number;
+  byStatus: Record<string, number>;
+}
+
+export type JobHuntListStatus = 'ACTIVE' | 'ARCHIVED' | 'ALL';
+
+export interface JobHuntListParams {
+  page?: number;
+  limit?: number;
+  status?: JobHuntListStatus;
+  includeStats?: boolean;
+}
+
+export interface JobHuntListResponse {
+  jobHunts: JobHunt[];
+  autoApplyQuota: number;
+  autoApplyQuotaRemaining: number;
+  // Total hunts for the status filter (bane MCP list deploy only; older bane omits it)
+  count?: number;
+  status?: JobHuntListStatus;
 }
 
 export interface JobApplication {
@@ -493,8 +530,16 @@ export class JobGPTApiClient {
 
   // ==================== Job Hunts ====================
 
-  async listJobHunts(page = 1, limit = 20): Promise<{ jobHunts: JobHunt[]; autoApplyQuota: number; autoApplyQuotaRemaining: number }> {
-    return this.get<{ jobHunts: JobHunt[]; autoApplyQuota: number; autoApplyQuotaRemaining: number }>('/job-hunts', { page, limit });
+  async listJobHunts(params: JobHuntListParams = {}): Promise<JobHuntListResponse> {
+    // status / includeStats are only sent when set: bane before the MCP list deploy 400s on unknown query keys
+    const query: Record<string, string | number | boolean> = { page: params.page || 1, limit: params.limit || 20 };
+    if (params.status) {
+      query.status = params.status;
+    }
+    if (params.includeStats) {
+      query.includeStats = true;
+    }
+    return this.get<JobHuntListResponse>('/job-hunts', query);
   }
 
   async createJobHunt(data: { name: string; config: JobSearchFilters; autoMode?: boolean; dailyLimit?: number; minMatchScore?: number; customizeResume?: boolean }): Promise<JobHunt> {

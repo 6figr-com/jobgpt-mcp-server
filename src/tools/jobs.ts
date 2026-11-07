@@ -21,6 +21,7 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
       industries: z.array(z.string()).optional().describe('Filter by company industries (use get_industries to see valid values)'),
       companySize: z.array(z.string()).optional().describe('Filter by company size (e.g., ["xs" for 1-50, "s" for 50-200, "m" for 200-1K, "l" for 1K-5K, "xl" for 5K+])'),
       h1bSponsorship: z.boolean().optional().describe('Filter for jobs offering H1B sponsorship'),
+      workAuthorization: z.array(z.string()).max(5).optional().describe('Work authorization filters (max 5). ["h1b"] only returns jobs that sponsor H1B, the same filter as h1bSponsorship true.'),
       limit: z.number().optional().describe('Maximum number of results (default: 5, max: 50). Keep low to avoid large responses.'),
       page: z.number().optional().describe('Page number for pagination (default: 1)'),
     },
@@ -40,6 +41,9 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
       if (args.industries) { filters.industries = args.industries; }
       if (args.companySize) { filters.companySize = args.companySize; }
       if (args.h1bSponsorship !== undefined) { filters.h1bSponsorship = args.h1bSponsorship; }
+      if (args.workAuthorization) {
+        filters.workAuthorization = args.workAuthorization;
+      }
 
       const result = await client.searchJobs({
         filters,

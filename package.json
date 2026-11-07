@@ -15,7 +15,7 @@
     "dev:worker": "wrangler dev",
     "deploy": "wrangler deploy",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "npm run build && node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -72,5 +72,12 @@
   "files": [
     "dist/**/*",
     "README.md"
-  ]
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.mjs"
+    ],
+    "transform": {}
+  }
 }

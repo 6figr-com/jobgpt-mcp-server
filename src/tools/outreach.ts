@@ -86,21 +86,25 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
 
   server.tool(
     'send_outreach',
-    'Send an outreach email to a recruiter or referrer for a job application. The email will be sent from your configured email.',
+    'Send an outreach email to a recruiter or referrer about a job. The email will be sent from your configured email. Pass applicationId for a saved application, or jobId for a job from search_jobs / match_jobs: with jobId the job is first added to your applications (reusing your existing application for that job if there is one), then the email is sent.',
     {
-      applicationId: z.string().describe('The job application ID'),
-      contactId: z.string().describe('The contact ID (from get_application_recruiters or get_application_referrers)'),
+      applicationId: z.string().optional().describe('The job application ID. Pass this or jobId.'),
+      jobId: z.string().optional().describe('A job ID (from search_jobs, match_jobs or get_job) for a job you have not saved yet. Pass this or applicationId.'),
+      jobHuntId: z.string().optional().describe('With jobId only: the job hunt to save the job under. Defaults to your most recently updated active job hunt.'),
+      contactId: z.string().describe('The contact ID (from get_job_recruiters / get_job_referrers for a jobId, or get_application_recruiters / get_application_referrers for an applicationId)'),
       subject: z.string().describe('Email subject line'),
       body: z.string().describe('Email body content'),
       slot: z.enum(['recruiter', 'hiring_manager', 'referral']).optional().describe('The slot returned by the contact tools; pass it through so the outreach is recorded correctly'),
     },
     async (args) => {
-      const result = await client.createOutreach(args.applicationId, args.contactId, args.subject, args.body, args.slot);
+      const applicationId = await resolveApplicationId(client, args);
+      const result = await client.createOutreach(applicationId, args.contactId, args.subject, args.body, args.slot);
       return {
         content: [{
           type: 'text' as const,
           text: JSON.stringify({
             message: 'Outreach email sent successfully',
+            applicationId,
             outreach: {
               id: result.id,
               contactName: result.contactName,
@@ -113,6 +117,33 @@ export function registerOutreachTools(server: McpServer, client: JobGPTApiClient
       };
     }
   );
+}
+
+// send_outreach takes an applicationId, or a jobId that is saved to applications first.
+// bane's create-application returns the user's existing application for the same job instead of a duplicate.
+async function resolveApplicationId(client: JobGPTApiClient, args: { applicationId?: string; jobId?: string; jobHuntId?: string }): Promise<string> {
+  if (args.applicationId && args.jobId) {
+    throw new Error('Pass either applicationId or jobId, not both.');
+  }
+  if (args.applicationId) {
+    return args.applicationId;
+  }
+  if (!args.jobId) {
+    throw new Error('applicationId or jobId is required.');
+  }
+  let jobHuntId = args.jobHuntId;
+  if (!jobHuntId) {
+    const hunts = await client.listJobHunts({ page: 1, limit: 1 });
+    if (!hunts.jobHunts.length) {
+      throw new Error('You have no active job hunt to save this job under. Create one with create_job_hunt, or pass jobHuntId.');
+    }
+    jobHuntId = hunts.jobHunts[0].id;
+  }
+  const application = await client.addJobToApplications(args.jobId, jobHuntId);
+  if (!application || !application.id) {
+    throw new Error(`Could not add job ${args.jobId} to your applications.`);
+  }
+  return application.id;
 }
 
 function formatContact(item: ContactWithEmail): Record<string, unknown> {

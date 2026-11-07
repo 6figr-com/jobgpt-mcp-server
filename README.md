@@ -242,7 +242,7 @@ If you prefer to run the server on your machine (requires Node.js 18+):
 
 | Tool | Description |
 |------|-------------|
-| `get_profile` | View your profile — skills, experience, work history, education |
+| `get_profile` | View your profile — skills, experience, work history, education, work authorization, notice period |
 | `update_profile` | Update name, headline, location, skills, experience |
 | `get_salary` | Get your current compensation details |
 | `update_salary` | Update base salary, stocks, bonus, target salary |
@@ -253,10 +253,10 @@ If you prefer to run the server on your machine (requires Node.js 18+):
 
 | Tool | Description |
 |------|-------------|
-| `list_job_hunts` | List your saved job hunts with credits balance |
+| `list_job_hunts` | List your job hunts (active, archived, or all) with optional per-hunt application counts and your credits balance |
 | `create_job_hunt` | Create a new job hunt with search filters and auto-apply settings |
 | `get_job_hunt` | Get details of a specific job hunt |
-| `update_job_hunt` | Update filters, auto-apply mode, daily limits, status |
+| `update_job_hunt` | Update filters (merged into the saved ones), auto-apply mode, daily limits, status |
 
 ### Applications
 
@@ -292,7 +292,7 @@ If you prefer to run the server on your machine (requires Node.js 18+):
 | `get_application_recruiters` | Get recruiters for a saved application |
 | `get_application_referrers` | Find referrers for a saved application |
 | `list_outreaches` | List your sent outreach emails |
-| `send_outreach` | Send an outreach email to a recruiter or referrer |
+| `send_outreach` | Send an outreach email to a recruiter or referrer, for a saved application or straight from a job ID |
 
 ---
 
