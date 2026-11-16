@@ -98,7 +98,7 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
       }).describe('Search filters configuration'),
       autoMode: z.boolean().optional().describe('Enable full autopilot mode (default: false). When enabled, jobs are automatically matched, scored against your resume using AI, and applied to if they meet your minMatchScore threshold. Resume customization (if enabled) is applied before each application. Each auto-apply consumes a credit.'),
       dailyLimit: z.number().optional().describe('Maximum jobs to auto-apply per day (default: 5, max: 100)'),
-      minMatchScore: z.number().optional().describe('Minimum match score for auto-apply (0-1). Jobs below this score will not be auto-applied. Default is 0.70 (70%) when not explicitly set.'),
+      minMatchScore: z.number().optional().describe('Minimum match score for auto-apply (0-1). Jobs below this score will not be auto-applied. Default is 0.80 (80%) when not explicitly set.'),
       customizeResume: z.boolean().optional().describe('Enable AI resume customization for applications (default: false)'),
     },
     async (args) => {
@@ -137,7 +137,7 @@ export function registerJobHuntTools(server: McpServer, client: JobGPTApiClient)
       name: z.string().optional().describe('New name for the job hunt'),
       autoMode: z.boolean().optional().describe('Enable/disable full autopilot mode. When enabled, jobs are automatically matched, scored against your resume using AI, and applied to if they meet your minMatchScore threshold. Resume customization (if enabled) is applied before each application. Each auto-apply consumes a credit.'),
       dailyLimit: z.number().optional().describe('Maximum jobs to auto-apply per day (max: 100)'),
-      minMatchScore: z.number().optional().describe('Minimum match score for auto-apply (0-1). Default is 0.70 (70%) when not explicitly set.'),
+      minMatchScore: z.number().optional().describe('Minimum match score for auto-apply (0-1). Default is 0.80 (80%) when not explicitly set.'),
       customizeResume: z.boolean().optional().describe('Enable/disable AI resume customization for applications'),
       status: z.enum(['ACTIVE', 'ARCHIVED', 'DELETED']).optional().describe('Job hunt status'),
       config: z.object({
