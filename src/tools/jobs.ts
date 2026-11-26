@@ -22,7 +22,7 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
       companySize: z.array(z.string()).optional().describe('Filter by company size (e.g., ["xs" for 1-50, "s" for 50-200, "m" for 200-1K, "l" for 1K-5K, "xl" for 5K+])'),
       h1bSponsorship: z.boolean().optional().describe('Filter for jobs offering H1B sponsorship'),
       workAuthorization: z.array(z.string()).max(5).optional().describe('Work authorization filters (max 5). ["h1b"] only returns jobs that sponsor H1B, the same filter as h1bSponsorship true.'),
-      excludeClearanceRequired: z.boolean().optional().describe('When true, skip jobs that require a US government security clearance (Secret, Top Secret, TS/SCI, or an unspecified clearance). Public Trust jobs are kept. Applied automatically when the user\'s profile says they need visa sponsorship.'),
+      maxClearanceLevel: z.enum(['none', 'secret', 'top_secret', 'ts_sci']).optional().describe('The highest US government security clearance the user holds. Hides jobs that require a higher one: "none" hides every clearance-required job (Secret, Top Secret, TS/SCI or an unspecified clearance), "secret" hides Top Secret and TS/SCI jobs, "top_secret" hides TS/SCI jobs, "ts_sci" hides nothing. Public Trust jobs are always kept. Omit to show all jobs.'),
       limit: z.number().optional().describe('Maximum number of results (default: 5, max: 50). Keep low to avoid large responses.'),
       page: z.number().optional().describe('Page number for pagination (default: 1)'),
     },
@@ -42,7 +42,7 @@ export function registerJobTools(server: McpServer, client: JobGPTApiClient) {
       if (args.industries) { filters.industries = args.industries; }
       if (args.companySize) { filters.companySize = args.companySize; }
       if (args.h1bSponsorship !== undefined) { filters.h1bSponsorship = args.h1bSponsorship; }
-      if (args.excludeClearanceRequired !== undefined) { filters.excludeClearanceRequired = args.excludeClearanceRequired; }
+      if (args.maxClearanceLevel) { filters.maxClearanceLevel = args.maxClearanceLevel; }
       if (args.workAuthorization) {
         filters.workAuthorization = args.workAuthorization;
       }

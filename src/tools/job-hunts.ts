@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { JobGPTApiClient, JobHunt, JobHuntListParams, JobHuntListResponse, JobSearchFilters } from '../api-client.js';
 
 // How to remove a saved filter on update. update_job_hunt merges config, so omitting a field keeps it.
-const CLEAR_FILTER_HELP = 'To remove a filter, send its empty value: [] for list filters (e.g. "companies": []), null for relevancy, dateOffset, baseSalaryMin and baseSalaryMax, and false for remote, h1bSponsorship and excludeClearanceRequired. Clearing H1B takes both "workAuthorization": [] and "h1bSponsorship": false. If locations and countries both end up empty, JobGPT falls back to a default country.';
+const CLEAR_FILTER_HELP = 'To remove a filter, send its empty value: [] for list filters (e.g. "companies": []), null for relevancy, dateOffset, baseSalaryMin, baseSalaryMax and maxClearanceLevel, and false for remote and h1bSponsorship. Clearing H1B takes both "workAuthorization": [] and "h1bSponsorship": false. If locations and countries both end up empty, JobGPT falls back to a default country.';
 
 // Filters shared by create_job_hunt and update_job_hunt (bane jobSearchFiltersSchema)
 const huntFilterFields = {
@@ -20,7 +20,7 @@ const huntFilterFields = {
   companySize: z.array(z.string()).optional().describe('Company sizes (e.g., ["xs" for 1-50, "s" for 50-200, "m" for 200-1K, "l" for 1K-5K, "xl" for 5K+])'),
   h1bSponsorship: z.boolean().optional().describe('When true, only match jobs that sponsor H1B visas. Same filter as workAuthorization ["h1b"]; either one turns it on.'),
   workAuthorization: z.array(z.string()).max(5).optional().describe('Work authorization filters (max 5). "h1b" is the only value that filters today: it only matches jobs that sponsor H1B, the same filter as h1bSponsorship true. Since either field turns the H1B filter on, clearing it takes workAuthorization [] AND h1bSponsorship false.'),
-  excludeClearanceRequired: z.boolean().optional().describe('When true, skip jobs that require a US government security clearance (Secret, Top Secret, TS/SCI, or an unspecified clearance). Public Trust jobs are kept. JobGPT also applies this, and skips US-citizenship-required jobs, when the user\'s profile says they need visa sponsorship, whatever this field says.'),
+  maxClearanceLevel: z.enum(['none', 'secret', 'top_secret', 'ts_sci']).nullable().optional().describe('The highest US government security clearance the user holds. Hides jobs that require a higher one: "none" hides every clearance-required job (Secret, Top Secret, TS/SCI or an unspecified clearance), "secret" hides Top Secret and TS/SCI jobs, "top_secret" hides TS/SCI jobs, "ts_sci" hides nothing. Public Trust jobs are always kept. null or omitted shows all jobs. JobGPT also applies "none", and skips US-citizenship-required jobs, when the user\'s profile says they need visa sponsorship, whatever this field says.'),
   relevancy: z.enum(['HIGH', 'MEDIUM']).nullable().optional().describe('Search relevancy mode - HIGH for strict title/skills matching (recommended), MEDIUM for broader keyword-based results. Default is null (MEDIUM behavior).'),
   dateOffset: z.enum(['24H', '1D', '2D', '7D', '14D', '1M', '3M', '6M', '9M', '1Y']).nullable().optional().describe('Only match jobs posted within this time window (e.g., "7D" for last 7 days). Default is "7D".'),
   workArrangement: z.array(z.string()).optional().describe('Work arrangement filter (e.g., ["Full Time", "Part Time", "Contract", "Internship", "Freelance", "Temporary"]). Defaults to ["Full Time"] if not set or empty.'),

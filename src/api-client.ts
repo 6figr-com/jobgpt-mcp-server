@@ -47,7 +47,7 @@ export interface JobSearchFilters {
   minimumDegree?: string[];
   h1bSponsorship?: boolean;
   workAuthorization?: string[];
-  excludeClearanceRequired?: boolean;
+  maxClearanceLevel?: 'none' | 'secret' | 'top_secret' | 'ts_sci' | null;
   roleType?: 'ic' | 'manager';
   roleTypeInternal?: 'ic' | 'manager';
   languageRequirements?: string[];
