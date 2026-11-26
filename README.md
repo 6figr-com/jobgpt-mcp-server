@@ -234,7 +234,7 @@ If you prefer to run the server on your machine (requires Node.js 18+):
 
 | Tool | Description |
 |------|-------------|
-| `search_jobs` | Search jobs with filters — titles, locations, companies, skills, salary, remote, H1B sponsorship |
+| `search_jobs` | Search jobs with filters — titles, locations, companies, skills, salary, remote, H1B sponsorship, excluding security-clearance jobs |
 | `match_jobs` | Get new job matches from a saved job hunt (only unseen jobs) |
 | `get_job` | Get full details of a specific job posting |
 

@@ -47,6 +47,7 @@ export interface JobSearchFilters {
   minimumDegree?: string[];
   h1bSponsorship?: boolean;
   workAuthorization?: string[];
+  excludeClearanceRequired?: boolean;
   roleType?: 'ic' | 'manager';
   roleTypeInternal?: 'ic' | 'manager';
   languageRequirements?: string[];
@@ -89,7 +90,11 @@ export interface Job {
   companySize?: string;
   experienceLevel?: string;
   skills?: string[];
+  clearanceLevel?: ClearanceLevel;
+  citizenshipRequired?: boolean;
 }
+
+export type ClearanceLevel = 'public_trust' | 'unspecified' | 'secret' | 'top_secret' | 'ts_sci';
 
 export interface Profile {
   id: string;

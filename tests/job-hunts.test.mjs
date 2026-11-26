@@ -100,6 +100,69 @@ describe('job hunt config schemas', () => {
   });
 });
 
+describe('excludeClearanceRequired filter', () => {
+  test('create_job_hunt passes excludeClearanceRequired through', async () => {
+    const client = mockClient();
+    client.createJobHunt.mockResolvedValue(HUNT);
+    const mcp = await connect(client);
+    const res = await callTool(mcp, 'create_job_hunt', { name: 'No clearance', config: { titles: ['Engineer'], excludeClearanceRequired: true } });
+    expect(res.isError).toBe(false);
+    expect(client.createJobHunt.mock.calls[0][0].config).toEqual({ titles: ['Engineer'], excludeClearanceRequired: true });
+  });
+
+  test('update_job_hunt clears it with false', async () => {
+    const client = mockClient();
+    client.updateJobHunt.mockResolvedValue(undefined);
+    client.getJobHunt.mockResolvedValue(HUNT);
+    const mcp = await connect(client);
+    const res = await callTool(mcp, 'update_job_hunt', { id: 'h1', config: { excludeClearanceRequired: false } });
+    expect(res.isError).toBe(false);
+    expect(client.updateJobHunt).toHaveBeenCalledWith('h1', { config: { excludeClearanceRequired: false } });
+  });
+
+  test('rejects non-boolean values', async () => {
+    const client = mockClient();
+    const mcp = await connect(client);
+    const res = await callTool(mcp, 'update_job_hunt', { id: 'h1', config: { excludeClearanceRequired: 'yes' } });
+    expect(res.isError).toBe(true);
+    expect(client.updateJobHunt).not.toHaveBeenCalled();
+  });
+
+  test('schemas expose it and the clear help mentions it', async () => {
+    const mcp = await connect(mockClient());
+    const create = await toolSchema(mcp, 'create_job_hunt');
+    const update = await toolSchema(mcp, 'update_job_hunt');
+    const search = await toolSchema(mcp, 'search_jobs');
+    expect(create.inputSchema.properties.config.properties.excludeClearanceRequired.type).toBe('boolean');
+    expect(update.inputSchema.properties.config.properties.excludeClearanceRequired.type).toBe('boolean');
+    expect(search.inputSchema.properties.excludeClearanceRequired.type).toBe('boolean');
+    expect(update.description).toMatch(/excludeClearanceRequired/);
+  });
+
+  test('search_jobs passes true and false through', async () => {
+    const client = mockClient();
+    client.searchJobs.mockResolvedValue({ jobs: [], count: 0 });
+    const mcp = await connect(client);
+    await callTool(mcp, 'search_jobs', { titles: ['Engineer'], excludeClearanceRequired: true });
+    await callTool(mcp, 'search_jobs', { titles: ['Engineer'], excludeClearanceRequired: false });
+    await callTool(mcp, 'search_jobs', { titles: ['Engineer'] });
+    expect(client.searchJobs.mock.calls[0][0].filters).toEqual({ titles: ['Engineer'], excludeClearanceRequired: true });
+    expect(client.searchJobs.mock.calls[1][0].filters).toEqual({ titles: ['Engineer'], excludeClearanceRequired: false });
+    expect(client.searchJobs.mock.calls[2][0].filters).toEqual({ titles: ['Engineer'] });
+  });
+
+  test('search_jobs surfaces clearanceLevel and citizenshipRequired on results', async () => {
+    const client = mockClient();
+    const job = { id: 'j1', title: 'Engineer', company: 'Acme', location: 'DC', url: 'https://x', remote: false, postedDate: '2026-11-20', clearanceLevel: 'public_trust', citizenshipRequired: true };
+    client.searchJobs.mockResolvedValue({ jobs: [job, { ...job, id: 'j2', clearanceLevel: undefined, citizenshipRequired: undefined }], count: 2 });
+    const mcp = await connect(client);
+    const res = await callTool(mcp, 'search_jobs', { titles: ['Engineer'] });
+    expect(res.json.jobs[0].clearanceLevel).toBe('public_trust');
+    expect(res.json.jobs[0].citizenshipRequired).toBe(true);
+    expect('clearanceLevel' in res.json.jobs[1]).toBe(false);
+  });
+});
+
 describe('JobGPTApiClient.listJobHunts', () => {
   const realFetch = globalThis.fetch;
   afterEach(() => {
